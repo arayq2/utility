@@ -14,7 +14,7 @@ namespace Utility
         static size_t cancel( Event& event, size_t count ) { return event.cancel( count ); }
         static void wait( Event& event ) { event.wait(); }
         static void stop( Event& event ) { event.stop(); }
-   };
+    };
     
     template<typename Handler, typename Monitor = Event>
     class WorkPile
@@ -69,30 +69,30 @@ namespace Utility
         }
         
         void stop()
-		{
-			if ( !stopped_ )
-			{
-				stopped_ = true;
-				queue_.stop();
-				pool_.stop();
-			}
-		}
+        {
+            if ( !stopped_ )
+            {
+                stopped_ = true;
+                queue_.stop();
+                pool_.stop();
+            }
+        }
         
         void resume( size_t poolSize = 1 )
         {
             if ( stopped_ )
-			{
-				queue_.start();
-				pool_.start( poolSize );
-				stopped_ = false;
-			}
+            {
+                queue_.start();
+                pool_.start( poolSize );
+                stopped_ = false;
+            }
         }
         
         void wait() { MonitorMethods<Event>::wait( monitor_ ); }
         
         size_t pending() { return MonitorMethods<Event>::post( monitor_, 0 ); }
-		
-		void cancel() { MonitorMethods<Event>::stop( monitor_ ); }
+        
+        void cancel() { MonitorMethods<Event>::stop( monitor_ ); }
 
     private:
         Monitor monitor_;

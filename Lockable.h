@@ -69,8 +69,8 @@ namespace Utility
         }
     };
 
-#define AUTOLOCK()      Utility::AutoLock           _guard_(this)
-#define THISLOCK(X)     std::unique_lock<std::mutex>    X(*this)
+#define AUTOLOCK()      Utility::AutoLock  _guard_(this)
+#define THISLOCK(X)     std::unique_lock<std::mutex>  X(*this)
 #define WITHLOCK()      Utility::WithLock(this)
     
     class Relockable
@@ -102,7 +102,7 @@ namespace Utility
         ~AutoRelock() { lp_->unlock(); }
     };
 
-#define AUTORELOCK()    Utility::AutoRelock         _guard_(this)
+#define AUTORELOCK()    Utility::AutoRelock  _guard_(this)
 
     class Event
     : private Lockable
@@ -143,16 +143,16 @@ namespace Utility
             AUTOLOCK();
             if ( count_ < sub ) { count_ = 0; }
             else                { count_ -= sub; }
-			if ( count_ == 0 ) { condition_.broadcast(); }
+            if ( count_ == 0 ) { condition_.broadcast(); }
             return count_;
         }
 
-		void stop()
-		{
-			AUTOLOCK();
-			count_ = 0;
-			condition_.broadcast();
-		}
+        void stop()
+        {
+            AUTOLOCK();
+            count_ = 0;
+            condition_.broadcast();
+        }
     private:
         Condition   condition_;
         size_t      count_;
