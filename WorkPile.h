@@ -6,14 +6,13 @@
 
 namespace Utility
 {
-    template<typename> struct MonitorMethods;
-
     template<>
     struct MonitorMethods<Event>
     {
         static void signal( Event& event ) { event.signal(); }
         static size_t post( Event& event, size_t count ) { return event.post( count ); }
         static size_t cancel( Event& event, size_t count ) { return event.cancel( count ); }
+        static size_t count( Event& event ) { return event.post( 0 ); }
         static void wait( Event& event ) { event.wait(); }
         static void stop( Event& event ) { event.stop(); }
    };
@@ -92,7 +91,7 @@ namespace Utility
         
         void wait() { MonitorMethods<Monitor>::wait( monitor_ ); }
         
-        size_t pending() { return MonitorMethods<Monitor>::post( monitor_, 0 ); }
+        size_t pending() { return MonitorMethods<Monitor>::count( monitor_ ); }
 		
 		void cancel() { MonitorMethods<Monitor>::stop( monitor_ ); }
 
