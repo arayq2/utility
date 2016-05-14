@@ -6,6 +6,8 @@
 
 namespace Utility
 {
+    template<typename> struct MonitorMethods;
+
     template<>
     struct MonitorMethods<Event>
     {
@@ -14,7 +16,7 @@ namespace Utility
         static size_t cancel( Event& event, size_t count ) { return event.cancel( count ); }
         static void wait( Event& event ) { event.wait(); }
         static void stop( Event& event ) { event.stop(); }
-    };
+   };
     
     template<typename Handler, typename Monitor = Event>
     class WorkPile
@@ -37,20 +39,20 @@ namespace Utility
         
         bool put( Item&& item )
         {
-            MonitorMethods<Event>::post( monitor_, 1 );
+            MonitorMethods<Monitor>::post( monitor_, 1 );
             if ( !queue_.put( std::move(item) ) )
             {
-                MonitorMethods<Event>::cancel( monitor_, 1 );
+                MonitorMethods<Monitor>::cancel( monitor_, 1 );
                 return false;
             }   
             return true;
         }
         bool put( Item& item )
         {
-            MonitorMethods<Event>::post( monitor_, 1 );
+            MonitorMethods<Monitor>::post( monitor_, 1 );
             if ( !queue_.put( item ) )
             {
-                MonitorMethods<Event>::cancel( monitor_, 1 );
+                MonitorMethods<Monitor>::cancel( monitor_, 1 );
                 return false;
             }
             return true;
@@ -59,40 +61,40 @@ namespace Utility
         template<typename Iterator>
         bool put( Iterator begin, Iterator end )
         {
-            MonitorMethods<Event>::post( monitor_, std::distance( begin, end ) );
+            MonitorMethods<Monitor>::post( monitor_, std::distance( begin, end ) );
             if ( !queue_.batch_put( begin, end ) )
             {
-                MonitorMethods<Event>::cancel( monitor_, std::distance( begin, end ) );
+                MonitorMethods<Monitor>::cancel( monitor_, std::distance( begin, end ) );
                 return false;
             }
             return true;
         }
         
         void stop()
-        {
-            if ( !stopped_ )
-            {
-                stopped_ = true;
-                queue_.stop();
-                pool_.stop();
-            }
-        }
+		{
+			if ( !stopped_ )
+			{
+				stopped_ = true;
+				queue_.stop();
+				pool_.stop();
+			}
+		}
         
         void resume( size_t poolSize = 1 )
         {
             if ( stopped_ )
-            {
-                queue_.start();
-                pool_.start( poolSize );
-                stopped_ = false;
-            }
+			{
+				queue_.start();
+				pool_.start( poolSize );
+				stopped_ = false;
+			}
         }
         
-        void wait() { MonitorMethods<Event>::wait( monitor_ ); }
+        void wait() { MonitorMethods<Monitor>::wait( monitor_ ); }
         
-        size_t pending() { return MonitorMethods<Event>::post( monitor_, 0 ); }
-        
-        void cancel() { MonitorMethods<Event>::stop( monitor_ ); }
+        size_t pending() { return MonitorMethods<Monitor>::post( monitor_, 0 ); }
+		
+		void cancel() { MonitorMethods<Monitor>::stop( monitor_ ); }
 
     private:
         Monitor monitor_;
