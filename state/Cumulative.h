@@ -58,6 +58,11 @@ namespace Statistics
         void bump();
         void append( double interval );
         
+        Cumulative(Cumulative const&) = default;
+        void swap( Cumulative& other );
+        // copy and swap idiom
+        Cumulative& operator= ( Cumulative rhs );
+        
         // comparison function for binary search.
         // override default lexicographic behavior with std::pair.
         static 
@@ -186,6 +191,22 @@ namespace Statistics
         }
         // Note: this also accounts for zero-length intervals
         bump();
+    }
+    
+    inline void
+    Cumulative::swap( Cumulative& other )
+    {
+        using std::swap;
+        buckets_.swap( other.buckets_ );
+        swap( scale_, other.scale_ );
+        swap( max_, other.max_ );
+    }
+    
+    inline Cumulative&
+    Cumulative::operator= ( Cumulative rhs )
+    {
+        swap( rhs );
+        return *this;
     }
     
     inline size_t

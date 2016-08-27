@@ -82,14 +82,19 @@ namespace Transition
 
         // assemble distribution
         template<typename Runtime>
-        Function(Row const& row, Runtime& rt);
+        Function(Row const* row, Runtime& rt);
         
         // sample and resolve
         StateId operator() ( double urv ) const;
         StateId operator() ( double urv, bool check /*discriminator*/ ) const;
         
+        Function(Function const&) = default;
+        void swap( Function& other );
+        // copy and swap idiom
+        Function& operator= ( Function const rhs );
+        
     private:
-        Row const&  row_;
+        Row const*  row_;
         Cdf         cdf_;
         
         double validate( double val ) const; // enforce [0,1)
@@ -171,27 +176,42 @@ namespace Transition
     
     template<typename Runtime>
     inline
-    Function::Function(Row const& row, Runtime& rt)
+    Function::Function(Row const* row, Runtime& rt)
     : row_(row)
     , cdf_()
     {
-        cdf_.reserve( row_.size() );
-        row_.apply( [&rt, this]( Cell const& cell ) -> void
+        cdf_.reserve( row_->size() );
+        row_->apply( [&rt, this]( Cell const& cell ) -> void
         {
             cdf_.append( cell( rt ) );
         } );
     }
     
+    inline void
+    Function::swap( Function& other )
+    {
+        using std::swap;
+        swap( row_, other.row_ );
+        cdf_.swap( other.cdf_ );
+    }
+    
+    inline Function&
+    Function::operator= ( Function rhs )
+    {
+        swap( rhs );
+        return *this;
+    }
+    
     inline StateId
     Function::operator() ( double urv ) const
     {
-        return row_.resolve( cdf_.invert( urv ) );
+        return row_->resolve( cdf_.invert( urv ) );
     }
 
     inline StateId
     Function::operator() ( double urv, bool ) const
     {
-        return row_.resolve( cdf_.invert( validate( urv ) ) );
+        return row_->resolve( cdf_.invert( validate( urv ) ) );
     }
 
     inline double
@@ -210,7 +230,7 @@ namespace Transition
     inline Function
     Matrix::sampler( StateId from, Runtime& rt ) const
     {
-        return Function(fromStates_.at( from ), rt);
+        return Function(&fromStates_.at( from ), rt);
     }
 
     template<typename Runtime>
