@@ -3,8 +3,6 @@
 #include "Cumulative.h"
 #include "DeclareException.h"
 
-    class OddsCalc; // external functor
-
 namespace Transition
 {
     // Transition.
@@ -12,6 +10,7 @@ namespace Transition
     // Suitable for dynamic assembly of a probability distribution 
     // based on odds ratio calculations (e.g. Begg-Gray).
 
+    class OddsCalc; // external functor, usually type-erased
     class Builder; // creates run time instances
 
     using StateId = size_t;
@@ -36,9 +35,9 @@ namespace Transition
         StateId     to_; // real index
         OddsCalc*   calc_;
         
-        friend class Builder;
         Cell(StateId to, OddsCalc* calc);
         
+        friend class Builder;
     };
     
     // Row.
@@ -53,27 +52,47 @@ namespace Transition
         Row(Row const&) = default;
         Row& operator= (Row const&) = default;
         
-        // inserts odds ratios into target (vector)
-        template<typename Inserter, typename Runtime>
-        void traverse( Inserter& inserter, Runtime& rt ) const;
-        
-        // translates notional index to state id
+        // translate notional index to state id
         StateId resolve( size_t index ) const;
         
-        // assemble distribution and resolve intercept
-        template<typename Runtime>
-        StateId transit( Runtime& rt, double prob ) const;
-    
+        // iterate over TO states (e.g. to assemble distribution)
         template<typename Action>
         void apply( Action&& action ) const;
+        
+        size_t size() const;
     
     private:
         StateId     from_; // real index
         CVector     toStates_;
         
-        friend class Builder;
         Row(StateId from);
         
+        friend class Builder;
+    };
+    
+    // Function
+    // Basic functionality of this module
+    //
+    class Function
+    {
+    public:
+        using Cdf = Statistics::Cumulative;
+        
+        DECLARE_EXCEPTION;
+
+        // assemble distribution
+        template<typename Runtime>
+        Function(Row const& row, Runtime& rt);
+        
+        // sample and resolve
+        StateId operator() ( double urv ) const;
+        StateId operator() ( double urv, bool check /*discriminator*/ ) const;
+        
+    private:
+        Row const&  row_;
+        Cdf         cdf_;
+        
+        double validate( double val ) const; // enforce [0,1)
     };
     
     // Matrix
@@ -88,20 +107,22 @@ namespace Transition
         Matrix(Matrix const&) = default;
         Matrix& operator= (Matrix const&) = default;
         
-        DECLARE_EXCEPTION;
+        template<typename Runtime>
+        Function sampler( StateId from, Runtime& rt ) const;
 
         template<typename Runtime>
-        StateId step( StateId from, Runtime& rt, double samplerVal ) const;
+        StateId step( StateId from, Runtime& rt, double probability ) const;
+
+        // same as above but enforces probability in [0,1)
+        template<typename Runtime>
+        StateId step( StateId from, Runtime& rt, double probability, bool check ) const;
 
     private:
         RVector     fromStates_;
-        struct URV
-        {
-            double operator() ( double val ) const; // enforce [0,1)
-        }           validator_;
         
+        Matrix() = default;
+
         friend class Builder;
-        Matrix() = default; 
     };
 
     // ==[ Implementation ]================================================
@@ -125,17 +146,6 @@ namespace Transition
     Row::Row(StateId from)
     : from_(from)
     {}
-    
-    template<typename Inserter, typename Runtime>
-    inline void
-    Row::traverse( Inserter& inserter, Runtime& rt ) const
-    {
-        for ( auto const& _cell : toStates_ )
-        {
-            *inserter = _cell( rt );
-            ++inserter;
-        }
-    }
 
     inline StateId
     Row::resolve( size_t index ) const
@@ -144,17 +154,6 @@ namespace Transition
         return index < toStates_.size() ? toStates_[index].id() : from_;
     }
 
-    template<typename Runtime>
-    inline StateId
-    Row::transit( Runtime& rt, double prob ) const
-    {
-        ProbDist::Cumulative    _cdf;
-        // assemble distribution
-        traverse( _cdf.inserter( toStates_.size() ), rt );
-        // sample and interpret result
-        return resolve( _cdf.index( prob ) );
-    }
-    
     template<typename Action>
     inline void
     Row::apply( Action&& action ) const
@@ -162,23 +161,70 @@ namespace Transition
         for ( auto const& _cell : toStates_ ) { action( _cell ); }
     }
     
-    ///////////////////////////////////////////////////////////////////////
-
-    template<typename Runtime>
-    inline StateId
-    Matrix::step( StateId from, Runtime& rt, double samplerVal ) const
+    inline size_t
+    Row::size() const
     {
-        return fromStates_.at( from ).transit( rt, validator_( samplerVal ) );
+        return toStates_.size();
+    }
+    
+    ///////////////////////////////////////////////////////////////////////
+    
+    template<typename Runtime>
+    inline
+    Function::Function(Row const& row, Runtime& rt)
+    : row_(row)
+    , cdf_()
+    {
+        cdf_.reserve( row_.size() );
+        row_.apply( [&rt, this]( Cell const& cell ) -> void
+        {
+            cdf_.append( cell( rt ) );
+        } );
+    }
+    
+    inline StateId
+    Function::operator() ( double urv ) const
+    {
+        return row_.resolve( cdf_.invert( urv ) );
+    }
+
+    inline StateId
+    Function::operator() ( double urv, bool ) const
+    {
+        return row_.resolve( cdf_.invert( validate( urv ) ) );
     }
 
     inline double
-    Matrix::URV::operator() ( double val ) const
+    Function::validate( double val ) const
     {
         if ( (val < 0.0) or !(val < 1.0) ) 
         {
-            throw Exception("Invalid probability");
+            throw Exception("Invalid sample probability");
         }
         return val;
     }
-    
+
+    ///////////////////////////////////////////////////////////////////////
+
+    template<typename Runtime>
+    inline Function
+    Matrix::sampler( StateId from, Runtime& rt ) const
+    {
+        return Function(fromStates_.at( from ), rt);
+    }
+
+    template<typename Runtime>
+    inline StateId
+    Matrix::step( StateId from, Runtime& rt, double probability ) const
+    {
+        return sampler( from, rt )( probability );
+    }
+
+    template<typename Runtime>
+    inline StateId
+    Matrix::step( StateId from, Runtime& rt, double probability, bool check ) const
+    {
+        return sampler( from, rt )( probability, check );
+    }
+
 } // namespace Transition

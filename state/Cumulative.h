@@ -2,11 +2,12 @@
 
 #include <vector>
 #include <algorithm>
-#include <iterator>
 #include <utility>
 
-namespace ProbDist
+namespace Statistics
 {
+    // See notes on the implementation at the end of this file.
+    
     using DVector = std::vector<double>;
     
     // policies to handle end() condition
@@ -44,7 +45,7 @@ namespace ProbDist
         using BVector = std::vector<Bucket>;
         
         Cumulative();
-
+        
         template<typename Container>
         explicit
         Cumulative(Container const& source);
@@ -55,7 +56,7 @@ namespace ProbDist
         // permits stepwise construction
         void reserve( size_t size );
         void bump();
-        void insert( double interval );
+        void append( double interval );
         
         // comparison function for binary search.
         // override default lexicographic behavior with std::pair.
@@ -66,10 +67,10 @@ namespace ProbDist
         }
         
         // index of interval bucketing this ordinate value
-        size_t index( double ordinate ) const;
+        size_t invert( double ordinate ) const;
         
         template<typename EndPolicy = Custom>
-        size_t index( double ordinate, size_t custom = 0 ) const;
+        size_t invert( double ordinate, size_t custom = 0 ) const;
         
         // use uniform [0,1) distribution rv generator directly
         template<typename Urvg>
@@ -77,6 +78,7 @@ namespace ProbDist
         
         // fill vector with implied density distribution
         size_t densities( DVector& df ) const;
+        DVector densities() const;
         
         class Inserter
         : public std::iterator<std::output_iterator_tag, void, void, void, void>
@@ -175,18 +177,19 @@ namespace ProbDist
     Cumulative::bump() { ++max_; }
     
     inline void 
-    Cumulative::insert( double interval )
+    Cumulative::append( double interval )
     {
         if ( interval > 0 )
         {
             scale_ += interval;
             buckets_.push_back( std::make_pair( scale_, max_ ) );
         }
+        // Note: this also accounts for zero-length intervals
         bump();
     }
     
     inline size_t
-    Cumulative::index( double ordinate ) const
+    Cumulative::invert( double ordinate ) const
     {
         auto    _bptr(std::upper_bound( buckets_.begin(), buckets_.end(),
                     std::make_pair( ordinate * scale_, 0 ), lessthan ));
@@ -195,7 +198,7 @@ namespace ProbDist
     
     template<typename EndPolicy>
     inline size_t
-    Cumulative::index( double ordinate, size_t custom ) const
+    Cumulative::invert( double ordinate, size_t custom ) const
     {
         auto    _bptr(std::upper_bound( buckets_.begin(), buckets_.end(),
                     std::make_pair( ordinate * scale_, 0 ), lessthan ));
@@ -209,7 +212,7 @@ namespace ProbDist
     inline size_t
     Cumulative::draw( Urvg& sampler ) const
     {
-        return index<Last>( sampler() );
+        return invert( sampler() );
     }
 
     inline size_t
@@ -224,6 +227,15 @@ namespace ProbDist
         return buckets_.size();
     }
     
+    // compiler should apply RVO here.
+    inline DVector
+    Cumulative::densities() const
+    {
+        DVector     _pdf;
+        densities( _pdf );
+        return _pdf;
+    }
+
     inline Cumulative::Inserter
     Cumulative::inserter( size_t size )
     {
@@ -234,8 +246,28 @@ namespace ProbDist
     inline Cumulative::Inserter&
     Cumulative::Inserter::operator= ( double step )
     {
-        cdf_->insert( step );
+        cdf_->append( step );
         return *this;
     }
+
+    ///////////////////////////////////////////////////////////////////////
+#if 0
+    NOTES
     
-} // namespace ProbDist
+    1. The basic idea of sampling from a probability distribution is to 
+    treat a uniform [0,1) random variable as the ordinate of the cumulative 
+    distribution function and determine the corresponding abscissa. This
+    algorithm is implemented in Intercept<EndPolicy>::operator(), where 
+    the cumulative distribution is (partially) computed on the fly.
+    
+    2. However, the empirical distributions often used in simulations are
+    usually computed in un-normalized form first, e.g. as a set of odds 
+    ratios from bivariate logistic regressions.  For sampling, normalizing 
+    these distributions is unnecessary. Instead the sum can be maintained
+    internally as a scale factor, while the partial sums computed on the 
+    way to the total are exactly the values required for a search using 
+    std::upper_bound(). The Transition::Cumulative class implements this,
+    and saves a number of division operations at the cost of a single
+    multiplication (scaling the ordinate for the search).
+#endif    
+} // namespace Statistics
