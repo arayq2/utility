@@ -60,8 +60,7 @@ namespace Statistics
         
         Cumulative(Cumulative const&) = default;
         void swap( Cumulative& other );
-        // copy and swap idiom
-        Cumulative& operator= ( Cumulative rhs );
+        Cumulative& operator= ( Cumulative rhs ); // copy and swap idiom
         
         // comparison function for binary search.
         // override default lexicographic behavior with std::pair.
@@ -284,11 +283,11 @@ namespace Statistics
     2. However, the empirical distributions often used in simulations are
     usually computed in un-normalized form first, e.g. as a set of odds 
     ratios from bivariate logistic regressions.  For sampling, normalizing 
-    these distributions is unnecessary. Instead the sum can be maintained
+    these distributions is not necessary. Instead the sum can be stored
     internally as a scale factor, while the partial sums computed on the 
     way to the total are exactly the values required for a search using 
-    std::upper_bound(). The Transition::Cumulative class implements this,
-    and saves a number of division operations at the cost of a single
-    multiplication (scaling the ordinate for the search).
+    std::upper_bound(). The Transition::Cumulative class implements this 
+    strategy, and saves a number of division operations at the cost of a 
+    single multiplication (scaling the ordinate for the search).
 #endif    
 } // namespace Statistics

@@ -10,8 +10,17 @@ namespace Transition
     // Suitable for dynamic assembly of a probability distribution 
     // based on odds ratio calculations (e.g. Begg-Gray).
 
-    class OddsCalc; // external functor, usually type-erased
-    class Builder; // creates run time instances
+    class Runtime;  // parameter wrapper, probably type-erased
+    class OddsCalc; // external functor
+    
+    template<typename OddsCalc> 
+    struct OddsCalcMethods
+    {
+        static double 
+        invoke( OddsCalc*, Runtime&, size_t );
+    };
+
+    class Builder;  // creates run time instances
 
     using StateId = size_t;
     
@@ -26,7 +35,6 @@ namespace Transition
         Cell& operator= (Cell const&) = default;
         
         // invokes odds ratio calculation
-        template<typename Runtime>
         double operator() ( Runtime& rt ) const;
         
         StateId id() const { return to_; }
@@ -47,6 +55,7 @@ namespace Transition
     {
     public:
         using CVector = std::vector<Cell>;
+        using iterator = CVector::const_iterator;
         
         // no public ctor (see below)
         Row(Row const&) = default;
@@ -61,6 +70,9 @@ namespace Transition
         
         size_t size() const;
     
+        iterator begin() const { return toStates_.cbegin(); }
+        iterator end()   const { return toStates_.cend(); }
+        
     private:
         StateId     from_; // real index
         CVector     toStates_;
@@ -81,7 +93,6 @@ namespace Transition
         DECLARE_EXCEPTION;
 
         // assemble distribution
-        template<typename Runtime>
         Function(Row const* row, Runtime& rt);
         
         // sample and resolve
@@ -90,8 +101,7 @@ namespace Transition
         
         Function(Function const&) = default;
         void swap( Function& other );
-        // copy and swap idiom
-        Function& operator= ( Function const rhs );
+        Function& operator= ( Function rhs ); // copy and swap idiom
         
     private:
         Row const*  row_;
@@ -112,14 +122,11 @@ namespace Transition
         Matrix(Matrix const&) = default;
         Matrix& operator= (Matrix const&) = default;
         
-        template<typename Runtime>
         Function sampler( StateId from, Runtime& rt ) const;
 
-        template<typename Runtime>
         StateId step( StateId from, Runtime& rt, double probability ) const;
 
         // same as above but enforces probability in [0,1)
-        template<typename Runtime>
         StateId step( StateId from, Runtime& rt, double probability, bool check ) const;
 
     private:
@@ -138,11 +145,10 @@ namespace Transition
     , calc_(calc)
     {}
     
-    template<typename Runtime>
     inline double
     Cell::operator() ( Runtime& rt ) const
     {
-        return (*calc_)( rt, to_ );
+        return OddsCalcMethods<OddsCalc>::invoke( calc_, rt, to_ );
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -174,17 +180,13 @@ namespace Transition
     
     ///////////////////////////////////////////////////////////////////////
     
-    template<typename Runtime>
     inline
     Function::Function(Row const* row, Runtime& rt)
     : row_(row)
     , cdf_()
     {
         cdf_.reserve( row_->size() );
-        row_->apply( [&rt, this]( Cell const& cell ) -> void
-        {
-            cdf_.append( cell( rt ) );
-        } );
+        for ( auto& cell : *row_ ) { cdf_.append( cell( rt ) ); }
     }
     
     inline void
@@ -226,21 +228,18 @@ namespace Transition
 
     ///////////////////////////////////////////////////////////////////////
 
-    template<typename Runtime>
     inline Function
     Matrix::sampler( StateId from, Runtime& rt ) const
     {
         return Function(&fromStates_.at( from ), rt);
     }
 
-    template<typename Runtime>
     inline StateId
     Matrix::step( StateId from, Runtime& rt, double probability ) const
     {
         return sampler( from, rt )( probability );
     }
 
-    template<typename Runtime>
     inline StateId
     Matrix::step( StateId from, Runtime& rt, double probability, bool check ) const
     {
