@@ -58,6 +58,7 @@ namespace Statistics
         void bump();
         void append( double interval );
         
+        // value type semantics
         Cumulative(Cumulative const&) = default;
         void swap( Cumulative& other );
         Cumulative& operator= ( Cumulative rhs ); // copy and swap idiom
@@ -238,13 +239,28 @@ namespace Statistics
     inline size_t
     Cumulative::densities( DVector& df ) const
     {
-        double  _prev(0.0);
+        double      _prev(0.0);
+        df.reserve( buckets_.size() );
         for ( auto const& _bucket : buckets_ )
         {
             df.push_back( (_bucket.first - _prev) / scale_ );
             _prev = _bucket.first;
         }
         return buckets_.size();
+    }
+    
+    inline DVector
+    Cumulative::densities() const
+    {
+        DVector     _df;
+        double      _prev(0.0);
+        _df.reserve( buckets_.size() );
+        for ( auto const& _bucket : buckets_ )
+        {
+            _df.push_back( (_bucket.first - _prev) / scale_ );
+            _prev = _bucket.first;
+        }
+        return _df;
     }
     
     // compiler should apply RVO here.

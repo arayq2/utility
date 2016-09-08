@@ -99,6 +99,7 @@ namespace Transition
         StateId operator() ( double urv ) const;
         StateId operator() ( double urv, bool check /*discriminator*/ ) const;
         
+		// value type semantics
         Function(Function const&) = default;
         void swap( Function& other );
         Function& operator= ( Function rhs ); // copy and swap idiom
