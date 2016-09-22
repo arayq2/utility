@@ -33,7 +33,7 @@
         
     public:
     // constructors
-        VarDate() : y_(0), m_(0), d_(0),datum_(0) {}
+        VarDate() : y_(0), m_(0), d_(0), datum_(0) {}
         
         VarDate( int y, int m, int d ) : y_(y), m_(m), d_(d), datum_(datum()) {}
 
@@ -200,7 +200,7 @@
         }
         
         static inline
-        int to_digit( char const data )
+        int toDigit( char const data )
         {
             return (data - '0');
         }
@@ -208,11 +208,11 @@
         static inline
         int qAtol( char const* data, int len )
         {
-            int result = to_digit( *data );
+            int result = toDigit( *data );
             while ( --len ) {
                 ++data;
                 result *= 10;
-                result += to_digit( *data );
+                result += toDigit( *data );
             }
             return result;
         }
@@ -228,7 +228,7 @@
         }
 
         static inline
-        int monthOfPlus_( int& days )
+        int monthOfPlus( int& days )
         {
             // binary search
             if ( days > 184 )
@@ -268,7 +268,7 @@
         }
         
         static inline
-        int monthOfMinus_( int& days )
+        int monthOfMinus( int& days )
         {
             // binary search: max(leap days) == 97 in 400 year cycle
             if ( days > -59 )
@@ -294,16 +294,16 @@
             int epoch = datum / VARDATE_CYCLE;
             datum_ = datum % VARDATE_CYCLE;
             y_ = datum_ / 365;
-            d_ = datum_ % 365 - leapDays( y_ );
+            d_ = datum_ % 365 - leapDays( y_ ); // 0 == last day of Feb
             
             if ( d_ > 0 )
             {
-                m_ = monthOfPlus_( d_ );
+                m_ = monthOfPlus( d_ );
                 if ( m_ < 3 ) { ++y_; }
             }
             else
             {
-                m_ = monthOfMinus_( d_ += isLeap( y_ ) );
+                m_ = monthOfMinus( d_ += isLeap( y_ ) );
                 if ( m_ > 2 ) { --y_; }
             }
             y_ += 400 * epoch;
