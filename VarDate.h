@@ -173,25 +173,17 @@
         {
             switch ( m )
             {
-            case  1: return d;
-            case  2: return d +  31;
-            case  3: return d +  59;
-            case  4: return d +  90;
-            case  5: return d + 120;
-            case  6: return d + 151;
-            case  7: return d + 181;
-            case  8: return d + 212;
-            case  9: return d + 243;
-            case 10: return d + 273;
-            case 11: return d + 304;
-            case 12: return d + 334;
+            case  1: return d;       case  2: return d +  31; case  3: return d +  59;
+            case  4: return d +  90; case  5: return d + 120; case  6: return d + 151;
+            case  7: return d + 181; case  8: return d + 212; case  9: return d + 243;
+            case 10: return d + 273; case 11: return d + 304; case 12: return d + 334;
             }
         }
         
         static inline
-        int yearDays( int yr, int mo )
+        int yearDays( int yr )
         {
-            return yr * 365 + leapDays( yr );
+            return yr * 365 + leapDays( yr ) - VARDATE_ADJUST;
         }
 
         static inline
@@ -199,10 +191,10 @@
         {
             switch ( mo )
             {
-            case  1: case  2: return daysInYear( mo, da ) + yearDays( yr, mo ) - VARDATE_ADJUST - isLeap( yr );
+            case  1: case  2: return daysInYear( mo, da ) + yearDays( yr ) - isLeap( yr );
             case  3: case  4: case  5: case  6:
             case  7: case  8: case  9: case 10:
-            case 11: case 12: return daysInYear( mo, da ) + yearDays( yr, mo ) - VARDATE_ADJUST;
+            case 11: case 12: return daysInYear( mo, da ) + yearDays( yr );
             default: return 0;
             }
         }
@@ -370,37 +362,40 @@
 
 /* ==[ NOTES ]================================================ +
 
-  This is not completely general, for performance reasons.  
-  It would be if parseDatum were invoked only on datum % 146097 
-  (== days in 400 years), adjusted to be positive, e.g.
+    This is not completely general, for performance reasons.  
+    It would be if parseDatum were invoked only on datum % 146097 
+    (== days in 400 years), adjusted to be positive, e.g.
 
-     int epoch = rawDatum / 146097 ;
-     int datum = rawDatum % 146097 ;
-     if ( datum < 0 ) { datum += 146097 ; epoch-- ; }
-     parseDatum( datum ) ;
-     y_ += 400 * epoch ;
+        int epoch = rawDatum / 146097 ;
+        int datum = rawDatum % 146097 ;
+        if ( datum < 0 ) { datum += 146097 ; epoch-- ; }
+        parseDatum( datum ) ;
+        y_ += 400 * epoch ;
 
-     and finally, as usual,
-     y_ += DATUM_BASE_YEAR ;
+        and finally, as usual,
+        y_ += DATUM_BASE_YEAR ;
 
-  where DATUM_BASE_YEAR % 400 == 0
+    where DATUM_BASE_YEAR % 400 == 0
 
-  Choosing a base year 0 mod 400 makes the math in isLeap() and 
-  leapDays() completely regular and efficient.  
-  
-  We choose DATUM_BASE_YEAR as 1600, rather than 2000, because of 
-  practicality: we need to handle dates in the (late) 1900's.
+    Choosing a base year 0 mod 400 makes the math in isLeap() and 
+    leapDays() completely regular and efficient.  
 
-  The algorithm is based on treating 1-Mar-DATUM_BASE_YEAR == 1,
-  in turn based on treating logical years as ending on the last
-  day of February of the same calendar year. Thus the initial
-  value of d_ will always be logical 0 for this particular day, 
-  in terms of logical years.  We catch the leap year case neatly 
-  in the else-branch of the final adjustment (the only way to 
-  get Feb 29 is to have d_ == 0 and isLeap(y_) == 1.) 
-  
- 
-  Factoid: 146097 % 7 == 0.  That is, the leap year cycle over
-  400 years also spans exactly 20871 weeks.  Hmm...
+    We choose DATUM_BASE_YEAR as 1600, rather than 2000, because  
+    of practicality: we need to handle dates in the (late) 1900's.
+
+    The algorithm in parseDatum_() is based on treating 
+    
+        1-Mar-DATUM_BASE_YEAR == 1
+        
+    in turn based on treating logical years as ending on the last
+    day of February of the same calendar year. Thus the initial
+    value of d_ will always be logical 0 for this particular day, 
+    in terms of logical years.  We catch the leap year case neatly 
+    in the else-branch of the final adjustment, as the only way to 
+    get Feb 29 is to have d_ == 0 and isLeap(y_) == 1. 
+
+
+    Factoid: 146097 % 7 == 0.  That is, the leap year cycle over
+    400 years also spans exactly 20871 weeks.  Hmm...
 
  + =========================================================== */
