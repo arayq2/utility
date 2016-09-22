@@ -33,9 +33,9 @@
         
     public:
     // constructors
-        VarDate() : datum_(0), y_(0), m_(0), d_(0) {}
+        VarDate() : y_(0), m_(0), d_(0),datum_(0) {}
         
-        VarDate( int y, int m, int d ) : y_(y), m_(m), d_(d) { datum_ = datum(); }
+        VarDate( int y, int m, int d ) : y_(y), m_(m), d_(d), datum_(datum()) {}
 
         VarDate( double comDate )
         {
@@ -100,12 +100,12 @@
     // arithmetic
         int operator- ( VarDate& rhs )
         {
-            return datum() - rhs.datum();
+            return datum_ - rhs.datum_;
         }
 
         VarDate& shift( int days )
         {
-            parseDatum_( datum() + days );
+            parseDatum_( datum_ + days );
             y_ += VARDATE_OFFSET;
             return *this;
         }
@@ -113,7 +113,7 @@
     // logical
         bool operator== ( VarDate& rhs )
         {
-            return y_ == rhs.y_ && m_ == rhs.m_ && d_ == rhs.d_;
+            return datum_ == rhs.datum_;
         }
 
         bool operator! ()
@@ -124,7 +124,7 @@
     // output
         double variantDate() 
         {
-            return (double) (datum() - VARDATE_ZERO);
+            return (double) (datum_ - VARDATE_ZERO);
         }
 
         int datum()
@@ -134,7 +134,7 @@
         
         int dow() // Sunday == 0, datum 0 == Tuesday
         {
-            return ((datum() + 2) % 7);
+            return ((datum_ + 2) % 7);
         }
 
     // utilities
@@ -292,10 +292,10 @@
         }
         
     private:
-        int   datum_; // days since 29-Feb-1600
         int   y_; // year
         int   m_; // month
         int   d_; // date
+        int   datum_; // days since 29-Feb-1600
 
         void parseDatum_( long datum )
         {
