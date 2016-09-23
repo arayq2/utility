@@ -98,7 +98,7 @@
         }
 
     // arithmetic
-        int operator- ( VarDate& rhs )
+        int operator- ( VarDate& rhs ) const
         {
             return datum_ - rhs.datum_;
         }
@@ -111,28 +111,28 @@
         }
 
     // logical
-        bool operator== ( VarDate& rhs )
+        bool operator== ( VarDate& rhs ) const
         {
             return datum_ == rhs.datum_;
         }
 
-        bool operator! ()
+        bool operator! () const
         {
             return y_ == 0 || m_ == 0 || d_ == 0;
         }
 
     // output
-        double variantDate() 
+        double variantDate() const
         {
             return (double) (datum_ - VARDATE_ZERO);
         }
 
-        int datum()
+        int datum() const
         {
             return rawCount( y_ - VARDATE_OFFSET, m_, d_ );
         }
         
-        int dow() // Sunday == 0, datum 0 == Tuesday
+        int dow() const // Sunday == 0, datum 0 == Tuesday
         {
             return ((datum_ + 2) % 7);
         }
@@ -209,7 +209,8 @@
         int qAtol( char const* data, int len )
         {
             int result = toDigit( *data );
-            while ( --len ) {
+            while ( --len )
+            {
                 ++data;
                 result *= 10;
                 result += toDigit( *data );
@@ -344,7 +345,7 @@
             }
         }
         
-        char const* month_( int month )
+        char const* month_( int month ) const
         {
             switch ( month )
             {
