@@ -74,5 +74,3 @@ namespace Utility
     
 } // namespace Utility
 
-#if 0
-#endif
