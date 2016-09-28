@@ -48,12 +48,19 @@
         { 3, 3.3, "three" },
     };
     
+    std::vector<double> newVals = { 4.4, 5.5, 6.6 };
+
 #include <iostream>
+#include <algorithm>
 
 int main()
 {
     for ( auto const& _i : getIntColumn( &exampleVec ) ) { std::cerr << "value: " << _i << std::endl; }
     for ( auto const& _d : getDblColumn( &exampleVec ) ) { std::cerr << "value: " << _d << std::endl; }
     for ( auto const& _s : getStrColumn( &exampleVec ) ) { std::cerr << "value: " << _s << std::endl; }
+    // wait, it gets better!
+    std::copy( newVals.begin(), newVals.end(), getDblColumn( &exampleVec ).begin() );
+    for ( auto const& _d : getDblColumn( &exampleVec ) ) { std::cerr << "value: " << _d << std::endl; }
+
     return 0;
 }
