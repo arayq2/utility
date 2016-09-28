@@ -7,10 +7,10 @@
 namespace Utility
 {
     template<typename T>
-    T* throwIfNull( T* ptr )
+    T* throwIfNull( T* ptr, char const* errmsg )
     {
         if ( ptr ) { return ptr; }
-        throw std::runtime_error("Null pointer initialization");
+        throw std::runtime_error(errmsg);
     }
 
     // Column.
@@ -28,7 +28,7 @@ namespace Utility
         using Field  = T Row::*;
     
         Column(Matrix* matrix, Field field)
-        : matrix_(throwIfNull(matrix))
+        : matrix_(throwIfNull( matrix, "Null Matrix* initialization" ))
         , field_(field)
         {}
         
@@ -45,7 +45,7 @@ namespace Utility
         {
         public:
             iterator(Column* column, size_t index = 0)
-            : column_(throwIfNull(column))
+            : column_(throwIfNull( column, "Null Column* initialization" ))
             , index_(index)
             {}
             
