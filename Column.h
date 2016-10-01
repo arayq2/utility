@@ -31,10 +31,11 @@ namespace Utility
 
     // Column.
     // A vector-like interface to a sequence of field values 
-    // ("column") in a vector of structs ("rows"). 
-    // This is an alternative to a "parallel arrays" strategy  
-    // of organizing a matrix of values, such as a collection  
-    // of time series with cross-sectional inter-relationships.
+    // ("column") in a vector of records ("rows"). 
+    // This is an alternative to a record of (equal-sized) 
+    // vectors (the "parallel arrays" strategy) for organizing
+    // a matrix of values, such as a collection of time series 
+    // with cross-sectional inter-relationships.
     //
     template<typename T, typename Row, bool NoCheck = false>
     class Column
