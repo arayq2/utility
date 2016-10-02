@@ -1,8 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <iterator>
 #include <stdexcept>    
+
+#include "StringKeyMap.h"
     
 namespace Utility
 {
@@ -32,10 +35,9 @@ namespace Utility
     // Column.
     // A vector-like interface to a sequence of field values 
     // ("column") in a vector of records ("rows"). 
-    // This is an alternative to a record of (equal-sized) 
-    // vectors (the "parallel arrays" strategy) for organizing
-    // a matrix of values, such as a collection of time series 
-    // with cross-sectional inter-relationships.
+    // This is an alternative to a "parallel arrays" strategy  
+    // of organizing a matrix of values, such as a collection  
+    // of time series with cross-sectional inter-relationships.
     //
     template<typename T, typename Row, bool NoCheck = false>
     class Column
@@ -88,6 +90,52 @@ namespace Utility
     private:
         Matrix*     matrix_;
         Field       field_;
+    };
+    
+    // ColumnAccess.
+    // Helper class to simplify the bolierplate of using the Column template.
+    // The Client class should
+    //  1. Derive publicly from ColAccess<Client>, to inherit the XXXColumn() methods.
+    //  2. Declare the class ColumnAccess<Client> a friend, to give it access to fields.
+    //  3. Populate the field maps (intMap_, dblMap_, strMap_).
+    //
+    // Note that the boilerplate can be reproduced explicitly for other member types, with
+    // only the Column creation methods visible publicly. See also: col_example.cpp
+    //
+
+    template<typename Client>
+    class ColumnAccess
+    {
+    public:
+        using rows   = std::vector<Client>;
+
+        template<typename T, bool NoCheck = false>
+        using column = Column<T, Client, NoCheck>;
+        
+        template<bool NoCheck = false>
+        static column<int, NoCheck> intColumn( rows* matrix, std::string const& name )
+        { return column<int, NoCheck>(matrix, intMap_[name]); }
+
+        template<bool NoCheck = false>
+        static column<double, NoCheck> dblColumn( rows* matrix, std::string const& name )
+        { return column<double, NoCheck>(matrix, dblMap_[name]); }
+
+        template<bool NoCheck = false>
+        static column<std::string, NoCheck> strColumn( rows* matrix, std::string const& name )
+        { return column<std::string, NoCheck>(matrix, strMap_[name]); }
+    
+        template<typename T>
+        using FieldMap = Utility::StringKeyMap<T Client::*, Utility::NoConv, Utility::DefaultThrow >;
+
+    private:
+        // Populating these requires template<> syntax, e.g.
+        // template<>
+        // Utility::ColumnAccess<Client>::FieldMap<int>
+        // Utility::ColumnAccess<Client>::intMap_ = { ... };
+        //
+        static FieldMap<int>            intMap_;
+        static FieldMap<double>         dblMap_;
+        static FieldMap<std::string>    strMap_;
     };
     
 } // namespace Utility
