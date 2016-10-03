@@ -162,7 +162,7 @@ namespace Utility
     
     private:
         using FieldMap = Utility::StringKeyMap<T Client::*, Utility::NoConv, Utility::DefaultThrow >;
-        // Populating these requires template<> syntax, e.g.
+        // Populating this requires template<> syntax, viz.
         // template<>
         // Utility::AccessMap<Client, int>::FieldMap
         // Utility::AccessMap<Client, int>::map_ = { ... };
