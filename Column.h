@@ -33,11 +33,11 @@ namespace Utility
     };
 
     // Column.
-    // A vector-like interface to a sequence of field values 
-    // ("column") in a vector of records ("rows"). 
-    // This is an alternative to a "parallel arrays" strategy  
-    // of organizing a matrix of values, such as a collection  
-    // of time series with cross-sectional inter-relationships.
+    // A vector-like interface to a sequence of field values ("column") in 
+    // a vector of records ("rows"). 
+    // This is an alternative to a record of (equal-sized) vectors (or the 
+    // "parallel arrays" strategy) to organize a matrix of values, such as
+    // a collection of time series with cross-sectional inter-relationships.
     //
     template<typename T, typename Row, bool NoCheck = false>
     class Column
@@ -93,16 +93,19 @@ namespace Utility
     };
     
     // ColumnAccess.
-    // Helper class to simplify the bolierplate of using the Column template.
+    // Helper class to simplify the bolierplate of using the Column 
+    // template.
     // The Client class should
-    //  1. Derive publicly from ColAccess<Client>, to inherit the XXXColumn() methods.
-    //  2. Declare the class ColumnAccess<Client> a friend, to give it access to fields.
+    //  1. Derive publicly from ColAccess<Client>, to inherit the 
+    //     XXXColumn() methods.
+    //  2. Declare the class ColumnAccess<Client> a friend, to give 
+    //     it access to fields.
     //  3. Populate the field maps (intMap_, dblMap_, strMap_).
     //
-    // Note that the boilerplate can be reproduced explicitly for other member types, with
-    // only the Column creation methods visible publicly. See also: col_example.cpp
+    // Note that the boilerplate can be reproduced explicitly for 
+    // other member types, with only the Column creation methods 
+    // visible publicly. See also: col_example.cpp
     //
-
     template<typename Client>
     class ColumnAccess
     {
@@ -136,6 +139,34 @@ namespace Utility
         static FieldMap<int>            intMap_;
         static FieldMap<double>         dblMap_;
         static FieldMap<std::string>    strMap_;
+    };
+    
+    // AccessMap.
+    // Mechanics of ColumnAccess for an individual type.
+    // Client will need to define a wrapper method to disambiguate
+    // the (static!) column() call.  See col2_example.cpp
+    //
+    template<typename Client, typename T>
+    class AccessMap
+    {
+    public:
+        using rows   = std::vector<Client>;
+
+        template<bool NoCheck = false>
+        using columnT = Column<T, Client, NoCheck>;
+        
+        template<bool NoCheck = false>
+        static columnT<NoCheck> column( rows* matrix, std::string const& name )
+        { return columnT<NoCheck>(matrix, map_[name]); }
+    
+    private:
+        using FieldMap = Utility::StringKeyMap<T Client::*, Utility::NoConv, Utility::DefaultThrow >;
+        // Populating these requires template<> syntax, e.g.
+        // template<>
+        // Utility::AccessMap<Client, int>::FieldMap
+        // Utility::AccessMap<Client, int>::map_ = { ... };
+        //
+        static FieldMap     map_;
     };
     
 } // namespace Utility
