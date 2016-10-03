@@ -7,9 +7,6 @@
     using Utility::AccessMap;
 
     class Example
-    : private AccessMap<Example, int>
-    , private AccessMap<Example, double>
-    , private AccessMap<Example, std::string>
     {
     public:
         Example(int i, double d, std::string const& s)
