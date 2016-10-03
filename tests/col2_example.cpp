@@ -3,7 +3,8 @@
 
 //==[ EXAMPLE ]========================================================
 
-    using namespace Utility;
+    using Utility::Column;
+    using Utility::AccessMap;
 
     class Example
     : private AccessMap<Example, int>
