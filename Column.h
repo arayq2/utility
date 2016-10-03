@@ -143,8 +143,9 @@ namespace Utility
     
     // AccessMap.
     // Mechanics of ColumnAccess for an individual type.
-    // Client will need to define a wrapper method to disambiguate
-    // the (static!) column() call.  See col2_example.cpp
+    // Instead of inheritance, the Client will need to define 
+    // a wrapper method to disambiguate the column() call. 
+    // See col2_example.cpp
     //
     template<typename Client, typename T>
     class AccessMap
