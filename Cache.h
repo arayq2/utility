@@ -71,8 +71,8 @@ namespace Utility
         }
 
         // for iterating over keys
-        auto begin() -> typename Tracker::iterator const { return tracker_.begin(); }
-        auto end()   -> typename Tracker::iterator const { return tracker_.end();   }
+        iterator begin()  { return tracker_.begin(); }
+        iterator end()    { return tracker_.end();   }
         
         template<typename Action>
         void apply( Action&& action ) const
