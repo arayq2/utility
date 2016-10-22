@@ -13,10 +13,8 @@
         
         std::string operator() ( std::string const& input )
         {
-            std::ostringstream  _oss;
-            _oss << input << "_val";
             ++count_;
-            return _oss.str();
+            return input + "_val";
         }
         
     private:
@@ -28,10 +26,8 @@ static size_t count = 0;
     
 std::string expfn( std::string const& input )
 {
-    std::ostringstream  _oss;
-    _oss << input << "_val";
     ++count;
-    return _oss.str();
+    return input + "_val";
 }
 
 void print_key( std::string const& key ) 
@@ -53,6 +49,8 @@ void test_tree()
     std::cerr << "Caching five: "  << _tcache( "five" ) << "\n";
     
     std::cerr << "Getting one: "   << _tcache( "one" ) << "\n";
+    std::cerr << "Getting four: "  << _tcache( "four" ) << "\n";
+    std::cerr << "Getting four: "  << _tcache( "four" ) << "\n";
     std::cerr << "Caching six: "   << _tcache( "six" ) << "\n";
     std::cerr << "Count: " << count << "\n";
     _tcache.apply( print_key );
@@ -76,6 +74,8 @@ void test_hash()
     std::cerr << "Caching five: "  << _hcache( "five" ) << "\n";
     
     std::cerr << "Getting one: "   << _hcache( "one" ) << "\n";
+    std::cerr << "Getting four: "  << _hcache( "four" ) << "\n";
+    std::cerr << "Getting four: "  << _hcache( "four" ) << "\n";
     std::cerr << "Caching six: "   << _hcache( "six" ) << "\n";
     std::cerr << "Count: " << _count << "\n";
     for ( auto& _key : _hcache ) { print_key( _key ); }
