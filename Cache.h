@@ -71,7 +71,7 @@ namespace Utility
         iterator end()   { return tracker_.end();   }
         
         template<typename Action>
-        void apply( Action&& action ) const
+        void foreach_key( Action&& action ) const
         {
             for ( auto const& key : tracker_ ) { action( key ); }
         }      

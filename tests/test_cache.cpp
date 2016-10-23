@@ -7,18 +7,18 @@
     class ExpensiveFunction
     {
     public:
-        ExpensiveFunction(size_t& count)
+        ExpensiveFunction(size_t* count)
         : count_(count)
         {}
         
         std::string operator() ( std::string const& input )
         {
-            ++count_;
+            ++*count_;
             return input + "_val";
         }
         
     private:
-        size_t&  count_;
+        size_t*  count_;
     };
 
 
@@ -53,7 +53,7 @@ void test_tree()
     std::cerr << "Getting four: "  << _tcache( "four" ) << "\n";
     std::cerr << "Caching six: "   << _tcache( "six" ) << "\n";
     std::cerr << "Count: " << count << "\n";
-    _tcache.apply( print_key );
+    _tcache.foreach_key( print_key );
     std::cerr << "\n";
 }
  
@@ -62,7 +62,7 @@ void test_hash()
     using HashCache = Utility::HashMapCache<std::string, std::string>;
     
     size_t              _count{0};
-    ExpensiveFunction   _ef(_count);
+    ExpensiveFunction   _ef(&_count);
     HashCache           _hcache(5, _ef);
 
     std::cerr << "\nTesting HashCache...\n";
@@ -78,7 +78,7 @@ void test_hash()
     std::cerr << "Getting four: "  << _hcache( "four" ) << "\n";
     std::cerr << "Caching six: "   << _hcache( "six" ) << "\n";
     std::cerr << "Count: " << _count << "\n";
-    for ( auto& _key : _hcache ) { print_key( _key ); }
+    for ( auto const& _key : _hcache ) { print_key( _key ); }
     std::cerr << "\n";
 }
      
