@@ -42,14 +42,10 @@ namespace Utility
             }
             // cache miss: get new value first (for exception safety)
             value_type  _nv(function_( key ));
-            // cache new key/value (not completely safe!)
+            // not completely safe!
             storage_[key] = std::make_pair(_nv, tracker_.insert( tracker_.end(), key ));
             // evict LRU entry if needed
-            while ( storage_.size() > capacity_ )
-            {
-                storage_.erase( storage_.find( tracker_.front() ) );
-                tracker_.pop_front();
-            }
+            check_cap_();
             return _nv;
         }
         
@@ -71,8 +67,8 @@ namespace Utility
         }
 
         // for iterating over keys
-        iterator begin()  { return tracker_.begin(); }
-        iterator end()    { return tracker_.end();   }
+        iterator begin() { return tracker_.begin(); }
+        iterator end()   { return tracker_.end();   }
         
         template<typename Action>
         void apply( Action&& action ) const
@@ -85,6 +81,15 @@ namespace Utility
         Function    function_;
         Tracker     tracker_;
         Storage     storage_;
+        
+        void check_cap_()
+        {
+            while ( storage_.size() > capacity_ )
+            {
+                storage_.erase( storage_.find( tracker_.front() ) );
+                tracker_.pop_front();
+            }
+        }
     };
 
     template<typename Key, typename Value>
