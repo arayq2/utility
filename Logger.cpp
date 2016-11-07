@@ -36,12 +36,12 @@ namespace // underlying implementation, not exposed
     }
 
     inline
-    void stream_print( std::ostream& os, char const* log, std::string const& timestamp, char const* strLevel )
+    void stream_print( std::ostream& os, std::ostringstream& msg, std::string const& timestamp, char const* strLevel )
     {
         os << timestamp
            << "|" << strLevel
            << "|" << std::setw(5) << ::syscall( SYS_gettid )
-           << "|" << log
+           << "|" << msg.str()
            << std::endl;
     }
 
@@ -63,7 +63,7 @@ namespace // underlying implementation, not exposed
         
         bool is_named( char const* name ) const { return name_.compare( name ) == 0; }
 
-        void write_log(char const* msg, std::string const& ts, char const* strLevel, ulong level )
+        void write_log( std::ostringstream& msg, std::string const& ts, char const* strLevel, ulong level )
         {
             if ( mask_ & level ) { do_write( msg, ts, strLevel ); }
         }
@@ -73,7 +73,7 @@ namespace // underlying implementation, not exposed
         std::string     name_;
         ulong           mask_;
         
-        virtual void do_write( char const* msg, std::string const& ts, char const* strLevel ) {}
+        virtual void do_write( std::ostringstream& msg, std::string const& ts, char const* strLevel ) {}
     };
     
     // Various subclass implemnentations
@@ -88,7 +88,7 @@ namespace // underlying implementation, not exposed
         {}
         
         virtual void
-        do_write( char const* msg, std::string const& ts, char const* strLevel ) override
+        do_write( std::ostringstream& msg, std::string const& ts, char const* strLevel ) override
         {
             stream_print( std::cerr, msg, ts, strLevel );
         }
@@ -105,7 +105,7 @@ namespace // underlying implementation, not exposed
         {}
         
         virtual void
-        do_write( char const* msg, std::string const& ts, char const* strLevel ) override
+        do_write( std::ostringstream& msg, std::string const& ts, char const* strLevel ) override
         {
             stream_print( ofs_, msg, ts, strLevel );
         }
@@ -125,7 +125,7 @@ namespace // underlying implementation, not exposed
         {}
         
         virtual void
-        do_write( char const* msg, std::string const& ts, char const* strLevel ) override
+        do_write( std::ostringstream& msg, std::string const& ts, char const* strLevel ) override
         {
             stream_print( os_, msg, ts, strLevel );
         }
@@ -145,9 +145,9 @@ namespace // underlying implementation, not exposed
         {}
     
         virtual void
-        do_write( char const* msg, std::string const& ts, char const* strLevel ) override
+        do_write( std::ostringstream& msg, std::string const& ts, char const* strLevel ) override
         {
-            functor_( msg, ts.c_str(), strLevel );
+            functor_( msg.str().c_str(), ts.c_str(), strLevel );
         }
 
     private:
@@ -167,9 +167,9 @@ namespace // underlying implementation, not exposed
         {}
         
         virtual void
-        do_write( char const* msg, std::string const& ts, char const* strLevel ) override
+        do_write( std::ostringstream& msg, std::string const& ts, char const* strLevel ) override
         {
-            callback_( context_, msg, ts.c_str(), strLevel );
+            callback_( context_, msg.str().c_str(), ts.c_str(), strLevel );
         }
         
     private:
@@ -237,7 +237,8 @@ namespace // underlying implementation, not exposed
         void remove_loggers( char const* tag )
         {
             AUTORELOCK();
-            loggers_.erase( std::remove_if( loggers_.begin(), loggers_.end(), [tag]( LoggerBase* logger )
+            loggers_.erase( std::remove_if( loggers_.begin(), loggers_.end(),
+            [tag]( LoggerBase* logger )
             {
                 if ( logger->is_named( tag ) )
                 {
@@ -248,14 +249,17 @@ namespace // underlying implementation, not exposed
             } ), loggers_.end() );
         }
         
-        void write_log( char const* msg, ulong level )
+        void write_log( std::ostringstream& msg, ulong level )
         {
             std::string const       _now(ts_.reset());
             char const*             _level(log_level_string( level ));              
             AUTORELOCK();
             if ( ToggleFalse _check{reentry_} )
             {
-                for ( auto logger : loggers_ ) { logger->write_log( msg, _now, _level, level ); }
+                for ( auto logger : loggers_ )
+                {
+                    logger->write_log( msg, _now, _level, level );
+                }
             }
         }
         
@@ -266,7 +270,7 @@ namespace // underlying implementation, not exposed
         bool                        first_;
      };
      
-     //avoid static initialization order disasters
+    //avoid static initialization order disasters
     LogManager& log_manager()
     {
         static LogManager   _manager;
@@ -281,7 +285,7 @@ namespace // underlying implementation, not exposed
     {
         try
         {
-            log_manager().write_log( oss_.str().c_str(), level_ );
+            log_manager().write_log( oss_, level_ );
         }
         catch (...) {}
     }
