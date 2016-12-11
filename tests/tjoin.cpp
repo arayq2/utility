@@ -25,7 +25,8 @@
 int
 main( int ac, char* av[] )
 {
-    std::cout << Utility::SequenceJoin<char**>( av + 1, av + ac, ":") << std::endl;
-    std::cout << Utility::SequenceJoin<char**, Bracket<char*> >( av + 1, av + ac, "") << std::endl;
+    std::cout << Utility::SequenceJoin<char**>( av + 1, av + ac ) << std::endl;
+    std::cout << Utility::SequenceJoin<char**>( av + 1, av + ac, ":" ) << std::endl;
+    std::cout << Utility::SequenceJoin<char**, Bracket<char*> >( av + 1, av + ac, "" ) << std::endl;
     return 0;
 }
