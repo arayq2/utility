@@ -20,7 +20,7 @@ int main()
     size_t          _ctr(0);
     size_t          _size;
     
-    while ( std::cin >> _size ) { _dist( _ctr++, _size ); }
+    while ( std::cin >> _size ) { _dist.assign( _ctr++, _size ); }
     output_lists( std::cout, _dist );
     return 0;
 }

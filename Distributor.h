@@ -38,7 +38,7 @@ namespace Utility
             std::make_heap( array_.begin(), array_.end(), Comparator() );
         }
         
-        size_t assign( size_t size )
+        size_t operator() ( size_t size )
         {
             // extract smallest total
             std::pop_heap( array_.begin(), array_.end(), Comparator() );
@@ -73,9 +73,9 @@ namespace Utility
         , lists_(size)
         {}
         
-        void operator() ( ValueType const& value, size_t size )
+        void assign( ValueType const& value, size_t size )
         {
-            lists_[indexer_.assign( size )].push_back( value );
+            lists_[indexer_( size )].push_back( value );
         }
 
         template<typename Action>
