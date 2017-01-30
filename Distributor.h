@@ -5,7 +5,6 @@
 
 namespace Utility
 {
-    template<bool HEAP_SMALLEST = false>
     class Indexer
     {
         struct Pair
@@ -19,7 +18,7 @@ namespace Utility
             {
                 bool operator() ( Pair const& lhs, Pair const& rhs )
                 {
-                    return HEAP_SMALLEST ? rhs.total_ < lhs.total_ : lhs.total_ < rhs.total_;
+                    return rhs.total_ < lhs.total_;
                 }
             };
             
@@ -33,18 +32,18 @@ namespace Utility
         {
             size_t  _ctr(0);
             for ( auto& _item : array_ ) { _item.index_ = _ctr++; }
-            std::make_heap( array_.begin(), array_.end(), typename Pair::Comparator() );
+            std::make_heap( array_.begin(), array_.end(), Pair::Comparator() );
         }
         
         size_t operator() ( size_t size )
         {
             // extract smallest total
-            std::pop_heap( array_.begin(), array_.end(), typename Pair::Comparator() );
+            std::pop_heap( array_.begin(), array_.end(), Pair::Comparator() );
             // save index
             size_t      _index(array_.back().index_);
             // update and reheap
             array_.back().total_ += size;
-            std::push_heap( array_.begin(), array_.end(), typename Pair::Comparator() );
+            std::push_heap( array_.begin(), array_.end(), Pair::Comparator() );
             
             return _index;
         }
@@ -56,7 +55,7 @@ namespace Utility
         }
         
     private:
-        std::vector<Pair>  	array_;
+        std::vector<Pair>   array_;
     };
     
     template<typename ValueType>
@@ -92,8 +91,8 @@ namespace Utility
         }
         
     private:
-        Indexer<true>   indexer_;
-        Lists           lists_;
+        Indexer     indexer_;
+        Lists       lists_;
     };
 
 } // namespace Utility
