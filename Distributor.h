@@ -27,26 +27,24 @@ namespace Utility
             size_t  total_;
         };
    
-        using Comparator = typename Indexer<HEAP_SMALLEST>::Pair::Comparator;
-
     public:
         Indexer(size_t size)
         : array_(size)
         {
             size_t  _ctr(0);
             for ( auto& _item : array_ ) { _item.index_ = _ctr++; }
-            std::make_heap( array_.begin(), array_.end(), Comparator() );
+            std::make_heap( array_.begin(), array_.end(), typename Pair::Comparator() );
         }
         
         size_t operator() ( size_t size )
         {
             // extract smallest total
-            std::pop_heap( array_.begin(), array_.end(), Comparator() );
+            std::pop_heap( array_.begin(), array_.end(), typename Pair::Comparator() );
             // save index
             size_t      _index(array_.back().index_);
             // update and reheap
             array_.back().total_ += size;
-            std::push_heap( array_.begin(), array_.end(), Comparator() );
+            std::push_heap( array_.begin(), array_.end(), typename Pair::Comparator() );
             
             return _index;
         }
@@ -58,7 +56,7 @@ namespace Utility
         }
         
     private:
-        std::vector<Pair>  array_;
+        std::vector<Pair>  	array_;
     };
     
     template<typename ValueType>
@@ -89,7 +87,7 @@ namespace Utility
         {
             indexer_.for_each( [&action, this]( size_t index, size_t total )
             {
-                action( total, static_cast<List const&>(lists_[index]) );
+                action( total, lists_[index] );
             } );
         }
         
