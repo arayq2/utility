@@ -76,13 +76,7 @@ namespace Utility
         }
 
         template<typename Action>
-        void for_each_list( Action&& action ) const
-        {
-            for ( auto const& _list : lists_ ) { action( _list ); }
-        }
-        
-        template<typename Action>
-        void for_each_index( Action&& action ) const
+        void for_each( Action&& action ) const
         {
             indexer_.for_each( [&action, this]( size_t index, size_t total )
             {

@@ -6,7 +6,7 @@ using Distributor = Utility::Distributor<size_t>;
 
 void output_lists( std::ostream& os, Distributor const& dist )
 {
-    dist.for_each_index( [&os]( size_t total, std::vector<size_t> const& list ) -> void
+    dist.for_each( [&os]( size_t total, std::vector<size_t> const& list ) -> void
     {
         os << "[" << total << "]";
         for ( auto& _index : list ) { os << "," << _index; }
