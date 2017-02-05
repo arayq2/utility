@@ -16,7 +16,7 @@ namespace Utility
         std::ostream& output( std::ostream& os ) const
         {
             return line_
-            ? (os << function_ << "(" << file_ << ":" << line_ << ")")
+            ? (os << function_ << "@" << file_ << ":" << line_)
             : (os << "(No location information)")
             ;
         }

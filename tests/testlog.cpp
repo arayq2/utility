@@ -3,7 +3,7 @@
 
 int main( void )
 {
-	FUNCTION_TRACE();
+    FUNCTION_TRACE();
     InfoLog << "Hello World!";
     return 0;
 }
