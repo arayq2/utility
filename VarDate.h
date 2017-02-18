@@ -43,9 +43,9 @@
             y_ += VARDATE_OFFSET;
         }
 
-        VarDate( int datum, bool excelDate = false )
+        VarDate( int datum, bool datumDate = false )
         {
-            parseDatum_( datum + (excelDate ? VARDATE_ZERO : 0) );
+            parseDatum_( datum + (datumDate ? 0 : VARDATE_ZERO) );
             y_ += VARDATE_OFFSET;
         }
 
