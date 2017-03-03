@@ -82,6 +82,12 @@ namespace Utility
         return os.write( reinterpret_cast<char const*>(&val), sizeof(T) );
     }
     
+    template<typename T>
+    std::istream& load_( std::istream& is, T& val )
+    {
+        return is.read( reinterpret_cast<char*>(&val), sizeof(T) );
+    }
+
     // FlatMatrix
     // Matrix facade on a memory block, with basic requirements only:
     // fixed dimensions known in advance,
@@ -186,13 +192,28 @@ namespace Utility
         , data_(own_ ? new DataType[size_] : data)
         , vect_(rows, value_type(cols))
         {
-            DataType*   _ptr(data_);
-            for ( auto& _row : vect_ )
+            init_( cols, true );
+        }
+        
+        FlatMatrix(std::istream& is)
+        : own_(true)
+        , size_(0)
+        , data_(nullptr)
+        , vect_()
+        {
+            size_t  _rows;
+            size_t  _cols;
+            if ( load_( is, _rows ) and load_( is, _cols ) )
             {
-                _row.data_ = _ptr;
-                if ( own_ ) { _row.reset( DataType() ); }
-                _ptr += cols;
+                size_ = _rows * _cols;
+                data_ = new DataType[size_];
+                if ( load( is ) )
+                {
+                    vect_.assign(_rows, value_type(_cols));
+                    init_( _cols, false );
+                }
             }
+            // else throw error
         }
         
         ~FlatMatrix() noexcept
@@ -263,6 +284,17 @@ namespace Utility
         
         FlatMatrix(FlatMatrix const&) = delete;
         FlatMatrix& operator=(FlatMatrix const&) = delete;
+        
+        void init_( size_t cols, bool reset )
+        {
+            DataType*   _ptr(data_);
+            for ( auto& _row : vect_ )
+            {
+                _row.data_ = _ptr;
+                if ( reset ) { _row.reset( DataType() ); }
+                _ptr += cols;
+            }
+        }
     };
 
 } // namespace Utility
