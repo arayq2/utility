@@ -101,6 +101,8 @@ namespace Utility
     class FlatMatrix
     {
     public:
+        struct Exception : public std::exception {};
+    
         class AsText
         {
         public:
@@ -192,7 +194,7 @@ namespace Utility
         , data_(own_ ? new DataType[size_] : data)
         , vect_(rows, value_type(cols))
         {
-            init_( cols, true );
+            init_( cols, own_ );
         }
         
         FlatMatrix(std::istream& is)
@@ -203,17 +205,12 @@ namespace Utility
         {
             size_t  _rows;
             size_t  _cols;
-            if ( load_( is, _rows ) and load_( is, _cols ) )
-            {
-                size_ = _rows * _cols;
-                data_ = new DataType[size_];
-                if ( load( is ) )
-                {
-                    vect_.assign(_rows, value_type(_cols));
-                    init_( _cols, false );
-                }
-            }
-            // else throw error
+            if ( !(load_( is, _rows ) and load_( is, _cols )) ) { throw Exception(); }
+            size_ = _rows * _cols;
+            data_ = new DataType[size_];
+            if ( !load( is ) ) { delete [] data_; throw Exception(); }
+            vect_.assign(_rows, value_type(_cols));
+            init_( _cols, false );
         }
         
         ~FlatMatrix() noexcept
