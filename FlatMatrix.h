@@ -1,18 +1,19 @@
 #pragma once
 
-#include <string>
+#include "DeclareException.h"
 #include <vector>
-#include <stdexcept>
 #include <algorithm>
 #include <iostream>
 
 namespace Utility
 {
     // Policy classes for bounds checking
+    //
     template<bool> struct ColMethods;
     template<bool> struct RowMethods;
     
     // Specializations
+    // false == check bounds, true == live dangerously
     //
     template<> struct ColMethods<false>
     {
@@ -76,6 +77,8 @@ namespace Utility
         }
     };
     
+    // Utilities
+    //
     template<typename T>
     std::ostream& dump_( std::ostream& os, T val )
     {
@@ -101,8 +104,229 @@ namespace Utility
     class FlatMatrix
     {
     public:
-        struct Exception : public std::exception {};
+        DECLARE_EXCEPTION;
+        DECLARE_SUBEXCEPTION(Dimensions);
+        DECLARE_SUBEXCEPTION(Data);
+ 
+        // ========================================================
+ 
+        // Sizer.
+        // Manages dimensions information.
+        //
+        struct Sizer
+        {
+            size_t  rows_;
+            size_t  cols_;
+            
+            Sizer(size_t rows, size_t cols)
+            : rows_(rows)
+            , cols_(cols)
+            {}
+            
+            Sizer(std::istream& is)
+            {
+                if ( !(load_( is, rows_ ) and load_( is, cols_ )) )
+                {
+                    throw DimensionsException();
+                }
+            }
+            
+            std::ostream& dump( std::ostream& os ) const
+            {
+                dump_( os, rows_ );
+                return dump_( os, cols_ );
+            }
+            
+            size_t size() const { return (rows_ * cols_); }
+        };
     
+        // DataBlock.
+        // Manages linear memory block.
+        //
+        class DataBlock
+        {
+        public:
+            DataBlock(size_t size, DataType* data = nullptr)
+            : own_(data == nullptr)
+            , size_(size)
+            , data_(own_ ? new DataType[size_]() : data)
+            {}
+            
+            ~DataBlock() noexcept
+            {
+                if ( own_ ) { delete [] data_; }
+            }
+            
+            std::istream& load( std::istream& is )
+            {
+                return is.read( reinterpret_cast<char*>(data_), size_ * sizeof(DataType) );
+            }
+        
+            std::ostream& dump( std::ostream& os ) const
+            {
+                return os.write( reinterpret_cast<char const*>(data_), size_ * sizeof(DataType) );
+            }
+            
+            DataType* origin( bool check = false ) const
+            {
+                return (!check ? data_ : own_ ? nullptr : data_);
+            }
+        
+        private:
+            bool        own_;
+            size_t      size_;
+            DataType*   data_;
+        };
+        
+        // ========================================================
+        
+        // Row.
+        // Minimal vector-like facade over memory block segment.
+        //
+        struct Index; // forward declaration of friend.
+        class Row
+        {
+        public:
+            using value_type     = DataType;
+            using iterator       = value_type*;
+            using const_iterator = value_type const*;
+            
+            Row(size_t size, value_type* data = nullptr)
+            : size_(size)
+            , data_(data)
+            {}
+            
+            value_type& operator[]( size_t index )
+            {
+                return ColMethods<SPEEDY>::at_( index, data_, size_ );
+            }
+            value_type const& operator[]( size_t index ) const
+            {
+                return ColMethods<SPEEDY>::at_( index, data_, size_ );
+            }
+        
+            iterator begin() { return data_; }
+            iterator end()   { return data_ + size_; }
+        
+            const_iterator begin() const { return data_; }
+            const_iterator end()   const { return data_ + size_; }
+            
+            void reset( DataType const& value )
+            {
+                for ( auto& _cell : *this ) { _cell = value; }
+            }
+            
+            size_t size() const { return size_; }
+            
+            friend class Index;
+        private:
+            size_t          size_;
+            value_type*     data_;
+        };
+        
+        using value_type     = Row;
+        using Vector         = std::vector<value_type>;
+        using iterator       = typename Vector::iterator;
+        using const_iterator = typename Vector::const_iterator;
+
+        // Index.
+        // Manages memory block segmentation into "rows".
+        //
+        struct Index
+        {
+            Vector      v_;
+            
+            Index(size_t rows, size_t cols, DataType* data)
+            : v_(rows, value_type(cols))
+            {
+                DataType*   _ptr(data);
+                for ( auto& _row : v_ )
+                {
+                    _row.data_ = _ptr;
+                    _ptr += cols;
+                }
+            }
+            
+            void reset( DataType const& value )
+            {
+                for ( auto& _row : v_ ) { _row.reset( value ); }
+            }
+        };
+        
+        // ========================================================
+        
+        FlatMatrix(size_t rows, size_t cols, DataType* data = nullptr)
+        : sizer_(rows, cols)
+        , block_(sizer_.size(), data)
+        , index_(rows, cols, block_.origin())
+        {}
+        
+        FlatMatrix(std::istream& is)
+        : sizer_(is)
+        , block_(sizer_.size())
+        , index_(sizer_.rows_, sizer_.cols_, block_.origin())
+        {
+            if ( !load( is ) ) { throw DataException(); }
+        }
+        
+        ~FlatMatrix() = default;
+        
+        value_type& operator[]( size_t index )
+        {
+            return RowMethods<SPEEDY>::at_( index, index_.v_ );
+        }
+        value_type const& operator[]( size_t index ) const
+        {
+            return RowMethods<SPEEDY>::at_( index, index_.v_ );
+        }
+    
+        void reset( DataType const& value = DataType() )
+        {
+            index_.reset( value );
+        }
+        
+        // allow raw access to externally owned data only
+        DataType* origin() { return block_.origin( true ); }
+                
+        iterator begin() { return index_.v_.begin(); }
+        iterator end()   { return index_.v_.end(); }
+    
+        const_iterator begin() const { return index_.v_.begin(); }
+        const_iterator end()   const { return index_.v_.end(); }
+        
+        size_t rows() const { return sizer_.rows_; }
+        size_t cols() const { return sizer_.cols_; }
+        size_t size() const { return sizer_.size(); }
+        
+        std::ostream& dump( std::ostream& os, bool dims = false ) const
+        {
+             if ( dims ) { sizer_.dump (os ); }
+             return block_.dump( os );
+        }
+        
+        friend
+        std::ostream& operator<<( std::ostream& os, FlatMatrix const& m )
+        {
+            return m.dump( os, true );
+        }
+        
+        // matrix needs to have been sized beforehand
+        std::istream& load( std::istream& is )
+        {
+             return block_.load( is );
+        }
+        
+        friend 
+        std::istream& operator>>( std::istream& os, FlatMatrix& m )
+        {
+            return m.load( os );
+        }
+                
+        // ========================================================
+
+        // AsText.
+        // Wrapper for formatted output. stream << AsText(flat_matrix_reference);
+        //
         class AsText
         {
         public:
@@ -140,158 +364,13 @@ namespace Utility
         };
         
         // ========================================================
-        
-        class Row
-        {
-        public:
-            using value_type     = DataType;
-            using iterator       = value_type*;
-            using const_iterator = value_type const*;
-            
-            Row(size_t size, value_type* data = nullptr)
-            : size_(size)
-            , data_(data)
-            {}
-            
-            value_type& operator[]( size_t index )
-            {
-                return ColMethods<SPEEDY>::at_( index, data_, size_ );
-            }
-            value_type const& operator[]( size_t index ) const
-            {
-                return ColMethods<SPEEDY>::at_( index, data_, size_ );
-            }
-        
-            iterator begin() { return data_; }
-            iterator end()   { return data_ + size_; }
-        
-            const_iterator begin() const { return data_; }
-            const_iterator end()   const { return data_ + size_; }
-            
-            void reset( DataType const& value )
-            {
-                for ( auto& _slot : *this ) { _slot = value; }
-            }
-            
-            size_t size() const { return size_; }
-            
-            friend class FlatMatrix;
-        private:
-            size_t          size_;
-            value_type*     data_;
-        };
-        
-        // ========================================================
-        
-        using value_type     = Row;
-        using Vector         = std::vector<value_type>;
-        using iterator       = typename Vector::iterator;
-        using const_iterator = typename Vector::const_iterator;
-        
-        FlatMatrix(size_t rows, size_t cols, DataType* data = nullptr)
-        : own_(data == nullptr)
-        , size_(rows * cols)
-        , data_(own_ ? new DataType[size_] : data)
-        , vect_(rows, value_type(cols))
-        {
-            init_( cols, own_ );
-        }
-        
-        FlatMatrix(std::istream& is)
-        : own_(true)
-        , size_(0)
-        , data_(nullptr)
-        , vect_()
-        {
-            size_t  _rows;
-            size_t  _cols;
-            if ( !(load_( is, _rows ) and load_( is, _cols )) ) { throw Exception(); }
-            size_ = _rows * _cols;
-            data_ = new DataType[size_];
-            if ( !load( is ) ) { delete [] data_; throw Exception(); }
-            vect_.assign(_rows, value_type(_cols));
-            init_( _cols, false );
-        }
-        
-        ~FlatMatrix() noexcept
-        {
-            if ( own_ ) { delete [] data_; }
-        }
-        
-        value_type& operator[]( size_t index )
-        {
-            return RowMethods<SPEEDY>::at_( index, vect_ );
-        }
-        value_type const& operator[]( size_t index ) const
-        {
-            return RowMethods<SPEEDY>::at_( index, vect_ );
-        }
-    
-        iterator begin() { return vect_.begin(); }
-        iterator end()   { return vect_.end(); }
-    
-        const_iterator begin() const { return vect_.begin(); }
-        const_iterator end()   const { return vect_.end(); }
-        
-        void reset( DataType const& value = DataType() )
-        {
-            for ( auto& _row : vect_ ) { _row.reset( value ); }
-        }
-        
-        // allow raw access to externally owned data only
-        DataType* origin() { return own_ ? nullptr : data_; }
-        
-        size_t rows() const { return vect_.size(); }
-        size_t cols() const { return (size_ / rows()); }
-        size_t size() const { return size_; }
-        
-        std::ostream& dump( std::ostream& os, bool dims = false ) const
-        {
-             if ( dims )
-             {
-                dump_( os, rows() );
-                dump_( os, cols() );
-             }
-             return os.write( reinterpret_cast<char const*>(data_), sizeof(DataType) * size_ );
-        }
-        
-        friend
-        std::ostream& operator<<( std::ostream& os, FlatMatrix const& m )
-        {
-            return m.dump( os, true );
-        }
-        
-        // matrix needs to have been sized beforehand
-        std::istream& load( std::istream& is )
-        {
-             return is.read( reinterpret_cast<char*>(data_), sizeof(DataType) * size_ );
-        }
-        
-        friend 
-        std::istream& operator>>( std::istream& os, FlatMatrix& m )
-        {
-            return m.load( os );
-        }
-                
     private:
-        bool        own_;
-        size_t      size_;
-        DataType*   data_;
-        Vector      vect_;
+        Sizer       sizer_;
+        DataBlock   block_;
+        Index       index_;
         
         FlatMatrix(FlatMatrix const&) = delete;
         FlatMatrix& operator=(FlatMatrix const&) = delete;
-        
-        void init_( size_t cols, bool reset )
-        {
-            DataType*   _ptr(data_);
-            for ( auto& _row : vect_ )
-            {
-                _row.data_ = _ptr;
-                if ( reset ) { _row.reset( DataType() ); }
-                _ptr += cols;
-            }
-        }
     };
 
 } // namespace Utility
