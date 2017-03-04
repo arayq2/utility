@@ -266,7 +266,7 @@ namespace Utility
         , block_(sizer_.size())
         , index_(sizer_.rows_, sizer_.cols_, block_.origin())
         {
-            if ( !load( is ) ) { throw DataException(); }
+            load( is );
         }
         
         ~FlatMatrix() = default;
@@ -313,7 +313,8 @@ namespace Utility
         // matrix needs to have been sized beforehand
         std::istream& load( std::istream& is )
         {
-             return block_.load( is );
+             if ( !block_.load( is ) ) { throw DataException(); }
+             return is;
         }
         
         friend 
