@@ -107,83 +107,11 @@ namespace Utility
         DECLARE_EXCEPTION;
         DECLARE_SUBEXCEPTION(Dimensions);
         DECLARE_SUBEXCEPTION(Data);
- 
-        // ========================================================
- 
-        // Sizer.
-        // Manages dimensions information.
-        //
-        struct Sizer
-        {
-            size_t  rows_;
-            size_t  cols_;
-            
-            Sizer(size_t rows, size_t cols)
-            : rows_(rows)
-            , cols_(cols)
-            {}
-            
-            Sizer(std::istream& is)
-            {
-                if ( !(load_( is, rows_ ) and load_( is, cols_ )) )
-                {
-                    throw DimensionsException();
-                }
-            }
-            
-            std::ostream& dump( std::ostream& os ) const
-            {
-                dump_( os, rows_ );
-                return dump_( os, cols_ );
-            }
-            
-            size_t size() const { return (rows_ * cols_); }
-        };
-    
-        // DataBlock.
-        // Manages linear memory block.
-        //
-        class DataBlock
-        {
-        public:
-            DataBlock(size_t size, DataType* data = nullptr)
-            : own_(data == nullptr)
-            , size_(size)
-            , data_(own_ ? new DataType[size_]() : data)
-            {}
-            
-            ~DataBlock() noexcept
-            {
-                if ( own_ ) { delete [] data_; }
-            }
-            
-            std::istream& load( std::istream& is )
-            {
-                return is.read( reinterpret_cast<char*>(data_), size_ * sizeof(DataType) );
-            }
-        
-            std::ostream& dump( std::ostream& os ) const
-            {
-                return os.write( reinterpret_cast<char const*>(data_), size_ * sizeof(DataType) );
-            }
-            
-            DataType* origin( bool check = false ) const
-            {
-                return (!check ? data_ : own_ ? nullptr : data_);
-            }
-        
-        private:
-            bool        own_;
-            size_t      size_;
-            DataType*   data_;
-        };
-        
-        // ========================================================
-        
+        struct Index; // forward declaration of friend.
+         
         // Row.
         // Minimal vector-like facade over memory block segment.
         //
-        struct Index; // forward declaration of friend.
         class Row
         {
         public:
@@ -228,32 +156,6 @@ namespace Utility
         using Vector         = std::vector<value_type>;
         using iterator       = typename Vector::iterator;
         using const_iterator = typename Vector::const_iterator;
-
-        // Index.
-        // Manages memory block segmentation into "rows".
-        //
-        struct Index
-        {
-            Vector      v_;
-            
-            Index(size_t rows, size_t cols, DataType* data)
-            : v_(rows, value_type(cols))
-            {
-                DataType*   _ptr(data);
-                for ( auto& _row : v_ )
-                {
-                    _row.data_ = _ptr;
-                    _ptr += cols;
-                }
-            }
-            
-            void reset( DataType const& value )
-            {
-                for ( auto& _row : v_ ) { _row.reset( value ); }
-            }
-        };
-        
-        // ========================================================
         
         FlatMatrix(size_t rows, size_t cols, DataType* data = nullptr)
         : sizer_(rows, cols)
@@ -261,6 +163,7 @@ namespace Utility
         , index_(rows, cols, block_.origin())
         {}
         
+        // assumes binary format: rows cols blob
         FlatMatrix(std::istream& is)
         : sizer_(is)
         , block_(sizer_.size())
@@ -300,7 +203,7 @@ namespace Utility
         
         std::ostream& dump( std::ostream& os, bool dims = false ) const
         {
-             if ( dims ) { sizer_.dump (os ); }
+             if ( dims ) { sizer_.dump( os ); }
              return block_.dump( os );
         }
         
@@ -366,9 +269,95 @@ namespace Utility
         
         // ========================================================
     private:
-        Sizer       sizer_;
-        DataBlock   block_;
-        Index       index_;
+        // Sizer.
+        // Manages dimensions information.
+        //
+        struct Sizer
+        {
+            size_t  rows_;
+            size_t  cols_;
+            
+            Sizer(size_t rows, size_t cols)
+            : rows_(rows)
+            , cols_(cols)
+            {}
+            
+            Sizer(std::istream& is)
+            {
+                if ( !(load_( is, rows_ ) and load_( is, cols_ )) )
+                {
+                    throw DimensionsException();
+                }
+            }
+            
+            std::ostream& dump( std::ostream& os ) const
+            {
+                dump_( os, rows_ );
+                return dump_( os, cols_ );
+            }
+            
+            size_t size() const { return (rows_ * cols_); }
+        }           sizer_;
+        // DataBlock.
+        // Manages linear memory block.
+        //
+        class Block
+        {
+        public:
+            Block(size_t size, DataType* data = nullptr)
+            : own_(data == nullptr)
+            , size_(size)
+            , data_(own_ ? new DataType[size_]() : data)
+            {}
+            
+            ~Block() noexcept
+            {
+                if ( own_ ) { delete [] data_; }
+            }
+            
+            std::istream& load( std::istream& is )
+            {
+                return is.read( reinterpret_cast<char*>(data_), size_ * sizeof(DataType) );
+            }
+        
+            std::ostream& dump( std::ostream& os ) const
+            {
+                return os.write( reinterpret_cast<char const*>(data_), size_ * sizeof(DataType) );
+            }
+            
+            DataType* origin( bool check = false ) const
+            {
+                return (!check ? data_ : own_ ? nullptr : data_);
+            }
+        
+        private:
+            bool        own_;
+            size_t      size_;
+            DataType*   data_;
+        }           block_;
+        // Index.
+        // Manages memory block segmentation into "rows".
+        //
+        struct Index
+        {
+            Vector      v_;
+            
+            Index(size_t rows, size_t cols, DataType* data)
+            : v_(rows, value_type(cols))
+            {
+                DataType*   _ptr(data);
+                for ( auto& _row : v_ )
+                {
+                    _row.data_ = _ptr;
+                    _ptr += cols;
+                }
+            }
+            
+            void reset( DataType const& value )
+            {
+                for ( auto& _row : v_ ) { _row.reset( value ); }
+            }
+        }           index_;
         
         FlatMatrix(FlatMatrix const&) = delete;
         FlatMatrix& operator=(FlatMatrix const&) = delete;
