@@ -9,10 +9,10 @@
 #ifndef DECLARE_EXCEPTION
 #define DECLARE_EXCEPTION \
     struct Exception : virtual public std::runtime_error\
-    { Exception(std::string const& msg) : std::runtime_error(msg) {} }
+    { Exception(std::string const& msg) : std::runtime_error(msg) {} };
 #endif
 #ifndef DECLARE_SUBEXCEPTION
 #define DECLARE_SUBEXCEPTION(XX) \
     struct XX##Exception : virtual public std::runtime_error\
-    { XX##Exception(std::string const& msg = #XX) : std::runtime_error(msg) {} }
+    { XX##Exception(std::string const& msg = #XX) : std::runtime_error(msg) {} };
 #endif
