@@ -184,16 +184,9 @@ namespace Utility
         
         ~FlatMatrix() = default;
         
-        FlatMatrix& operator=( FlatMatrix const& rhs )
+        FlatMatrix& operator=( FlatMatrix rhs ) // copy and swap idiom
         {
-            FlatMatrix  _other(rhs);
-            swap_( _other );
-            return *this;
-        }
-        
-        FlatMatrix& operator=( FlatMatrix&& rhs )
-        {
-            swap_( std::move(rhs) );
+            swap_( rhs );
             return *this;
         }
         
@@ -397,7 +390,7 @@ namespace Utility
 
         }           index_;
 
-        void swap_( FlatMatrix&& other )
+        void swap_( FlatMatrix& other )
         {
             using std::swap;
             swap( sizer_, other.sizer_ );
