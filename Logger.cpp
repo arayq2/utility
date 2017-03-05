@@ -238,7 +238,7 @@ namespace // underlying implementation, not exposed
         {
             AUTORELOCK();
             loggers_.erase( std::remove_if( loggers_.begin(), loggers_.end(),
-            [tag]( LoggerBase* logger )
+            [tag]( LoggerBase* logger ) -> bool
             {
                 if ( logger->is_named( tag ) )
                 {

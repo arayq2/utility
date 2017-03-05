@@ -309,7 +309,7 @@ namespace Utility
             
             size_t size() const { return (rows_ * cols_); }
         }           sizer_;
-        // DataBlock.
+        // Block.
         // Manages linear memory block.
         //
         class Block
