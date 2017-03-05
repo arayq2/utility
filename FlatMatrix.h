@@ -2,6 +2,7 @@
 
 #include "DeclareException.h"
 #include "SequenceJoin.h"
+#include <algorithm>
 #include <vector>
 #include <iostream>
 #include <cstring>
@@ -183,14 +184,14 @@ namespace Utility
         
         ~FlatMatrix() = default;
         
-        FlatMatrix& operator=(FlatMatrix const& rhs)
+        FlatMatrix& operator=( FlatMatrix const& rhs )
         {
             FlatMatrix  _other(rhs);
             swap_( _other );
             return *this;
         }
         
-        FlatMatrix& operator=(FlatMatrix&& rhs)
+        FlatMatrix& operator=( FlatMatrix&& rhs )
         {
             swap_( std::move(rhs) );
             return *this;
@@ -332,12 +333,13 @@ namespace Utility
             , size_(model.size_)
             , data_(new DataType[size_])
             {
-                ::memcpy( data_, model.data_, size_ * sizeof(DataType) );
+                try { std::copy( model.data_, model.data_ + size_, data_ ); }
+                catch (...) { release_(); throw; }
             }
 
             ~Block() noexcept
             {
-                if ( own_ ) { delete [] data_; }
+                if ( own_ ) { release_(); }
             }
             
             std::istream& load( std::istream& is )
@@ -361,6 +363,8 @@ namespace Utility
             DataType*   data_;
             
             Block& operator=( Block& ) = delete;
+            
+            void release_() { delete [] data_; }
             
         }           block_;
         // Index.
