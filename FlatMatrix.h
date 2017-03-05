@@ -1,9 +1,10 @@
 #pragma once
 
 #include "DeclareException.h"
+#include "SequenceJoin.h"
 #include <vector>
-#include <algorithm>
 #include <iostream>
+#include <cstring>
 
 namespace Utility
 {
@@ -171,8 +172,29 @@ namespace Utility
         {
             load( is );
         }
+
+        FlatMatrix(FlatMatrix const& model)
+        : sizer_(model.sizer_)
+        , block_(model.block_)
+        , index_(sizer_.rows_, sizer_.cols_, block_.origin())
+        {}
+        
+        FlatMatrix(FlatMatrix &&) = default;
         
         ~FlatMatrix() = default;
+        
+        FlatMatrix& operator=(FlatMatrix const& rhs)
+        {
+            FlatMatrix  _other(rhs);
+            swap_( _other );
+            return *this;
+        }
+        
+        FlatMatrix& operator=(FlatMatrix&& rhs)
+        {
+            swap_( std::move(rhs) );
+            return *this;
+        }
         
         value_type& operator[]( size_t index )
         {
@@ -242,15 +264,10 @@ namespace Utility
             
             std::ostream& output( std::ostream& os ) const
             {
+                using Joiner = Utility::SequenceJoin<typename Row::const_iterator>;
                 for ( auto const& _row : matrix_ )
                 {
-                    auto    _ptr(_row.begin());
-                    if ( _ptr != _row.end() )
-                    {
-                        os << *_ptr;
-                        while ( ++_ptr != _row.end() ) { os << delim_ << *_ptr; }
-                    }
-                    os << eol_;
+                    os << Joiner(_row.begin(), _row.end(), delim_) << eol_;
                 }
                 return os;
             }
@@ -310,6 +327,14 @@ namespace Utility
             , data_(own_ ? new DataType[size_]() : data)
             {}
             
+            Block(Block const& model)
+            : own_(true)
+            , size_(model.size_)
+            , data_(new DataType[size_])
+            {
+                ::memcpy( data_, model.data_, size_ * sizeof(DataType) );
+            }
+
             ~Block() noexcept
             {
                 if ( own_ ) { delete [] data_; }
@@ -334,6 +359,9 @@ namespace Utility
             bool        own_;
             size_t      size_;
             DataType*   data_;
+            
+            Block& operator=( Block& ) = delete;
+            
         }           block_;
         // Index.
         // Manages memory block segmentation into "rows".
@@ -357,10 +385,21 @@ namespace Utility
             {
                 for ( auto& _row : v_ ) { _row.reset( value ); }
             }
+            
+            void swap( Index& other )
+            {
+                v_.swap( other.v_ );
+            }
+
         }           index_;
-        
-        FlatMatrix(FlatMatrix const&) = delete;
-        FlatMatrix& operator=(FlatMatrix const&) = delete;
+
+        void swap_( FlatMatrix&& other )
+        {
+            using std::swap;
+            swap( sizer_, other.sizer_ );
+            swap( block_, other.block_ );
+            index_.swap( other.index_ );
+        }
     };
 
 } // namespace Utility
