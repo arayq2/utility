@@ -180,7 +180,11 @@ namespace Utility
         , index_(sizer_.rows_, sizer_.cols_, block_.origin())
         {}
         
-        FlatMatrix(FlatMatrix &&) = default;
+        FlatMatrix(FlatMatrix&& other)
+        : sizer_(other.sizer_)
+        , block_(std::move(other.block_))
+        , index_(other.index_)
+        {}
         
         ~FlatMatrix() = default;
         
@@ -330,6 +334,14 @@ namespace Utility
                 catch (...) { release_(); throw; }
             }
 
+            Block(Block&& src)
+            : own_(src.own_)
+            , size_(src.size_)
+            , data_(src.data_)
+            {
+                src.own_ = false;
+            }
+            
             ~Block() noexcept
             {
                 if ( own_ ) { release_(); }
