@@ -228,15 +228,26 @@ namespace // underlying implementation, not exposed
             AUTORELOCK();
             if ( !first_ )
             {
-                remove_loggers( STDERR_TAG ); // kill logger from ctor
+                remove_tag( STDERR_TAG ); // kill logger from ctor
                 first_ = true;
             }
             loggers_.push_back( logger );
         }
      
+        void keep_logger()
+        {
+            AUTORELOCK();
+            first_ = true;
+        }
+        
         void remove_loggers( char const* tag )
         {
             AUTORELOCK();
+            remove_tag( tag );
+        }
+        
+        void remove_tag( char const* tag )
+        {
             loggers_.erase( std::remove_if( loggers_.begin(), loggers_.end(),
             [tag]( LoggerBase* logger ) -> bool
             {
@@ -315,9 +326,9 @@ namespace // underlying implementation, not exposed
         log_manager().remove_loggers( tag );
     }
 
-    void LogStream::stop_default_logger()
+    void LogStream::keep_default_logger()
     {
-        log_manager().remove_loggers( STDERR_TAG );
+        log_manager().keep_logger();
     }
 
 

@@ -90,8 +90,10 @@ namespace Log
         
         // removes all loggers for a given tag
         static void remove_loggers( char const* tag );
-        // disables a default logger, statically initialized to enable logging before main() is entered.
-        static void stop_default_logger();
+        // a default logger is statically initialized to enable logging before main() is entered.
+        // it is disabled by default when another logger is enabled from the app level, unless
+        // this is called first to keep the default logger.
+        static void keep_default_logger();
         
     private:
         std::ostringstream      oss_;
