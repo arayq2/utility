@@ -66,6 +66,20 @@ namespace Utility
             tracker_.clear();
         }
 
+        size_t capacity( size_t new_cap = 0 )
+        {
+            size_t  _cap(capacity_);
+            if ( new_cap > 0 )
+            {
+                capacity_ = new_cap;
+            }
+            if ( capacity_ < _cap )
+            {
+                check_cap_();
+            }
+            return _cap;
+        }
+
         // for iterating over keys
         iterator begin() { return tracker_.begin(); }
         iterator end()   { return tracker_.end();   }
