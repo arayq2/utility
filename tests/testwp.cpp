@@ -1,6 +1,7 @@
 
 #include "WorkPile.h"
 #include <iostream>
+#include <sstream>
 //#include <unistd.h>
 
     class Handler
@@ -14,7 +15,10 @@
 
         void operator() ( ItemType ptr )
         {
-            os_ << "Thread [" << std::this_thread::get_id() << "]: " << ptr << std::endl;
+			std::ostringstream	_oss;
+
+            _oss << "Thread [" << std::this_thread::get_id() << "]: " << ptr << "\n";
+			os_ << _oss.str() << std::flush;
             std::this_thread::yield();
             //::sleep( 1 );
         }
