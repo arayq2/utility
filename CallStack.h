@@ -27,7 +27,7 @@ namespace Utility
         : CallStack()
         {
             offset_ = 2;
-            apply( action );
+            for_each( action );
         }
         
         template<typename Action>
@@ -35,7 +35,7 @@ namespace Utility
         : CallStack()
         {
             offset_ = 2;
-            apply( action );
+            for_each( action );
         }
         
         ~CallStack() { ::free( symbols_ ); }
@@ -46,7 +46,7 @@ namespace Utility
         iterator end()   const { return symbols_ + depth_;  }
         
         template<typename Action>
-        void apply( Action const& action ) const
+        void for_each( Action const& action ) const
         {
             for ( auto const& _symbol : *this ) { action( _symbol ); }
         }

@@ -46,8 +46,8 @@ namespace Utility
         {}
         
         // could use a lambda instead
-        void operator() ( CallStack&& stack ) const { stack.apply( *this ); }
-        void operator() ( CallStack const& stack ) const { stack.apply( *this ); }
+        void operator() ( CallStack&& stack ) const { stack.for_each( *this ); }
+        void operator() ( CallStack const& stack ) const { stack.for_each( *this ); }
         
         void operator() ( char* symbol ) const { printer_( SymbolAnalyser(symbol) ); }
         

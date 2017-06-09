@@ -26,16 +26,16 @@ namespace Utility
     SigMask::SigMask()
     {
         ::sigemptyset( &mask_ );
-    	::sigaddset( &mask_, SIGINT );
-    	::sigaddset( &mask_, SIGTERM );
-    	::sigaddset( &mask_, SIGHUP );
-    	::sigaddset( &mask_, SIGQUIT );
-    	::sigaddset( &mask_, SIGCONT );
-    	pthread_sigmask( SIG_BLOCK, &mask_, nullptr );
+        ::sigaddset( &mask_, SIGINT );
+        ::sigaddset( &mask_, SIGTERM );
+        ::sigaddset( &mask_, SIGHUP );
+        ::sigaddset( &mask_, SIGQUIT );
+        ::sigaddset( &mask_, SIGCONT );
+        pthread_sigmask( SIG_BLOCK, &mask_, nullptr );
     }
     
     /* static */
-	template<typename ErrorPolicy>
+    template<typename ErrorPolicy>
     void SigWait<ErrorPolicy>::install_handlers( bool childAlso )
     {
         struct sigaction    _action;
