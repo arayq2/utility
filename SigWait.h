@@ -37,24 +37,22 @@ namespace Utility
         sigset_t    mask_;
     };
 
-    template<typename ErrorPolicy = IgnoreSigwaitError>
     class SigWait
     {
     public:
         explicit
-        SigWait(bool deferHandlers = false, ErrorPolicy const& errPolicy = ErrorPolicy())
-        : errPolicy_(errPolicy)
-        , sigmask_()
+        SigWait(bool deferHandlers = false)
+        : sigmask_()
         {
             if ( !deferHandlers ) { install_handlers(); }
         }
         
         static void install_handlers( bool childAlso = false );
         
-        int wait() { return sigmask_.wait( errPolicy_ ); }
+        template<typename ErrorPolicy = IgnoreSigwaitError>
+        int wait( ErrorPolicy const& errPolicy = ErrorPolicy() ) { return sigmask_.wait( errPolicy ); }
         
     private:
-        ErrorPolicy     errPolicy_;
         SigMask         sigmask_;
     };
     

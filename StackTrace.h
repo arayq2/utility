@@ -63,9 +63,9 @@ namespace Utility
     public:
         explicit
         StackTrace(char const* prefix = "Stack trace:\n")
-        : oss_(prefix)
+        : oss_(prefix, std::ostringstream::ate)
         , printer_(oss_)
-        , stack_(printer_)
+        , stack_(printer_, 2)
         {}
         
         char const* get() const { return oss_.str().c_str(); }

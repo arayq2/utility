@@ -35,8 +35,7 @@ namespace Utility
     }
     
     /* static */
-    template<typename ErrorPolicy>
-    void SigWait<ErrorPolicy>::install_handlers( bool childAlso )
+    void SigWait::install_handlers( bool childAlso )
     {
         struct sigaction    _action;
     

@@ -23,18 +23,18 @@ namespace Utility
         {}
         
         template<typename Action>
-        CallStack(Action&& action)
+        CallStack(Action&& action, size_t delta = 1)
         : CallStack()
         {
-            offset_ = 2;
+            offset_ += delta;
             for_each( action );
         }
         
         template<typename Action>
-        CallStack(Action const& action)
+        CallStack(Action const& action, size_t delta = 1)
         : CallStack()
         {
-            offset_ = 2;
+            offset_ += delta;
             for_each( action );
         }
         
