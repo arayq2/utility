@@ -1,114 +1,12 @@
 #pragma once
 
+#include "CallStack.h"
 #include <ostream>
-#include <string>
-#include <algorithm>
-#include <cstring>
-#include <cstdlib>
-
-#include <cxxabi.h>
-#include <execinfo.h>
+#include <sstream>
+#include <stdexcept>
 
 namespace Utility
 {   
-    // StackTrace.
-    // Aggregates GNU compiler callstack.
-    //
-    class StackTrace
-    {
-        enum { ST_SIZE = 100 }; // deeper callstacks are in trouble anyway
-    public:
-        StackTrace()
-        : offset_(1)
-        , depth_(::backtrace( stack_, ST_SIZE ))
-        , symbols_(::backtrace_symbols( stack_, depth_ ))
-        {}
-        
-        template<typename Action>
-        StackTrace(Action&& action)
-        : StackTrace()
-        {
-            offset_ = 2;
-            apply( action );
-        }
-        
-        template<typename Action>
-        StackTrace(Action const& action)
-        : StackTrace()
-        {
-            offset_ = 2;
-            apply( action );
-        }
-        
-        ~StackTrace() { ::free( symbols_ ); }
-        
-        template<typename Action>
-        void apply( Action const& action ) const
-        {
-            std::for_each( symbols_ + offset_, symbols_ + depth_, action );
-        }
-        
-    private:
-        size_t  offset_; // ignore our ctor(s) at top of call stack
-        int     depth_;
-        char**  symbols_;
-        void*   stack_[ST_SIZE];
-    };
-    
-    // Demangler.
-    // Tries to demangle a C++ ABI name.
-    //
-    class Demangler
-    {
-    public:
-        Demangler(std::string const& symbol)
-        : buffer_(abi::__cxa_demangle( symbol.c_str(), nullptr, nullptr, &status_ ))
-        {
-            switch ( status_ )
-            {
-            case  0 : str_ = std::string(buffer_); break;
-            case -1 : str_.assign( "(Memory allocation failure!)" ); break;
-            case -2 : str_.assign( symbol ); break; // invalid mangled name
-            default : str_.assign( "(Invalid argument in call!)" ); break;
-            }
-        }
-        
-        Demangler(char const* begin, char const* end)
-        : Demangler(std::string(begin, end))
-        {}
-        
-        ~Demangler() { ::free( buffer_ ); }
-        
-        operator std::string const& () const { return str_; }
-        
-    private:
-        int         status_{0};
-        char*       buffer_;
-        std::string str_;
-    };
-
-    // SymbolAnalyzer.
-    // Tries to determine whether a callstack entry has a name symbol.
-    //
-    class SymbolAnalyzer
-    {
-    public:
-        SymbolAnalyzer(char* symbol)
-        : begin_(::strchr( symbol, '(' ))
-        , end_(::strchr( symbol, '+' ))
-        , str_(symbol)
-        {
-            if ( begin_ and end_ ) { str_ = Demangler(begin_ + 1, end_); }
-        }
-        
-        operator std::string const& () const { return str_; }
-        
-    private:
-        char*       begin_;
-        char*       end_;
-        std::string str_;
-    };
-    
     // SYmbolPrinter.
     // Pretty-prints callstack entries.
     //
@@ -135,9 +33,9 @@ namespace Utility
     // Organizes pretty-printing of a GNU compiler callstack.
     //
     // Sample usage:
-    //      (CallstackPrinter(std::cerr))( StackTrace() );
+    //      (CallstackPrinter(std::cerr))( CallStack() );
     // Or:
-    //      StackTrace(CallstackPrinter(std::cerr));
+    //      CallStack(CallstackPrinter(std::cerr));
     // Yes, both ways work!:-)
     //
     class CallstackPrinter
@@ -148,14 +46,50 @@ namespace Utility
         {}
         
         // could use a lambda instead
-        void operator() ( StackTrace&& trace ) const { trace.apply( *this ); }
-        void operator() ( StackTrace const& trace ) const { trace.apply( *this ); }
+        void operator() ( CallStack&& stack ) const { stack.apply( *this ); }
+        void operator() ( CallStack const& stack ) const { stack.apply( *this ); }
         
-        void operator() ( char* symbol ) const { printer_( SymbolAnalyzer(symbol) ); }
+        void operator() ( char* symbol ) const { printer_( SymbolAnalyser(symbol) ); }
         
     private:
         SymbolPrinter   printer_;
     };
+    
+    // StackTrace.
+    // Holds a stack trace as a string.
+    //
+    class StackTrace
+    {
+    public:
+        explicit
+        StackTrace(char const* prefix = "Stack trace:\n")
+        : oss_(prefix)
+        , printer_(oss_)
+        , stack_(printer_)
+        {}
+        
+        char const* get() const { return oss_.str().c_str(); }
+        
+        operator char const* () const { return get(); }
 
+    private:
+        std::ostringstream  oss_;
+        CallstackPrinter    printer_;
+        CallStack           stack_;
+    };
+
+    // TrapException.
+    // Capture stack trace as part of conversion of
+    // hardware trap (synchronous signal) to exception.
+    //
+    struct TrapException
+    : public std::runtime_error
+    {
+        explicit
+        TrapException(char const* prefix)
+        : std::runtime_error(StackTrace(prefix))
+        {}
+    };
+    
 } // namespace Utility
 
