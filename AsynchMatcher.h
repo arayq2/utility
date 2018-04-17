@@ -16,16 +16,16 @@ namespace Utility
         using Promise = std::promise<ValueType>;
         using Map     = std::map<std::string, Promise>;
         using Future  = std::future<ValueType>;
-		
-		AsynchMatcher()
-		: map_()
-		{}
+        
+        AsynchMatcher()
+        : map_()
+        {}
         
         Future reserve( std::string const& key )
         {
             AUTOLOCK();
             auto    _itr(map_.insert( std::make_pair( key, Promise() ) ).first);
-            return std::move(_itr->second.get_future());
+            return _itr->second.get_future();
         }
         
         bool fulfill( std::string const& key, ValueType&& value )
