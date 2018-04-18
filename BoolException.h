@@ -29,10 +29,11 @@ namespace Utility
         bool    condition_;
     };
 
+} // namespace Utility
+
 #define THROW_UNLESS(...)       THROW_ON_FALSE(std::runtime_error,__VA_ARGS__)
 #define THROW_IF(...)           THROW_ON_TRUE(std::runtime_error,__VA_ARGS__)
-#define THROW_ON_FALSE(X,...)   Utility::BoolException<X, false>(LOCATION(),__VA_ARGS__) 
-#define THROW_ON_TRUE(X,...)    Utility::BoolException<X, true>(LOCATION(),__VA_ARGS__) 
+#define THROW_ON_FALSE(X,...)   Utility::BoolException<false, X>(LOCATION(),__VA_ARGS__) 
+#define THROW_ON_TRUE(X,...)    Utility::BoolException<true, X>(LOCATION(),__VA_ARGS__) 
     
 
-} // namespace Utility
