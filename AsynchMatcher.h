@@ -35,7 +35,7 @@ namespace Utility
             
             if ( _itr != map_.end() )
             {
-                _itr->second.set_value( std::move(value) );
+                _itr->second.set_value( std::forward<ValueType>(value) );
                 map_.erase( _itr );
                 return true;
             }
