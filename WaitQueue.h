@@ -23,9 +23,11 @@ namespace Utility
         // promises still on the queue will set_exception() on their futures
         ~WaitQueue() noexcept = default;
     
-        void lock() { append( std::this_thread::get_id() ).get(); }
-        
+        void lock()   { append( std::this_thread::get_id() ).get(); }
         void unlock() { remove( std::this_thread::get_id() ); }
+
+        void acquire() { lock(); }
+        void release() { unlock(); }
 
     private:
         using ThdId   = std::thread::id;
