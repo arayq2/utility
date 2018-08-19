@@ -40,13 +40,13 @@ namespace Utility
         using From = typename Converter::from_type;
         
         template<typename Retval, Retval (To::* Method)(Args...)>
-        static Retval rv_fn( From* from, Args... args )
+        static Retval function( From* from, Args... args )
         {
             return (Converter::cast( from )->*Method)( std::forward<Args>(args)... );
         }
 
         template<void (To::* Method)(Args...)>
-        static void vd_fn( From* from, Args... args )
+        static void function( From* from, Args... args )
         {
             (Converter::cast( from )->*Method)( std::forward<Args>(args)... );
         }
