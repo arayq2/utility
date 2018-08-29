@@ -68,9 +68,9 @@ namespace Utility
         , stack_(printer_, 2)
         {}
         
-        char const* get() const { return oss_.str().c_str(); }
+        std::string const get() const { return oss_.str(); }
         
-        operator char const* () const { return get(); }
+        operator std::string const () const { return get(); }
 
     private:
         std::ostringstream  oss_;
