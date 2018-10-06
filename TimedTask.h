@@ -15,7 +15,10 @@ namespace Utility
      * init_value : initialized resource result type
      * null_value : "failure" mode of the result type
      * acquire    : obvious functionality
-     * release    : equally obvious functionality     
+     * release    : equally obvious functionality
+     *
+     * NOTE: Object must still exist when the detached thread 
+     * completes. 
      */
     template<typename Methods>
     class TimedTask
