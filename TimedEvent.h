@@ -17,7 +17,7 @@ namespace Utility
         TimedEvent()
         : future_(promise_.get_future())
         {}
-        
+        // called by notifier (producer)
         bool expired()
         {
             SpinLock    _lock(flag_);
@@ -25,7 +25,7 @@ namespace Utility
             promise_.set_value();
             return expired_;
         }
-    
+        // called by waiter (consumer)
         bool complete( unsigned millis )
         {
             future_.wait_for( std::chrono::milliseconds(millis) );
