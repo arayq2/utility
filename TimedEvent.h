@@ -9,6 +9,10 @@ namespace Utility
      * TimedEvent.
      * Notification subject to a timeout.  Notifier is returned 
      * expiration status, waiter is returned completion status. 
+     * Intended use is conditional transfer of responsibility 
+     * (e.g., for resource release) from notifier to waiter: if
+     * the wait period has expired, responsibility remains with
+     * the notifier; otherwise, it is transfered to the waiter. 
      */
     class TimedEvent
     {
@@ -22,7 +26,7 @@ namespace Utility
             SpinLock    _lock(flag_);
             complete_ = true;
             try { promise_.set_value(); }
-            catch ( std::future_error& ) { return true; }
+            catch ( std::future_error& ) {}
             return expired_;
         }
         // called by waiter (consumer)
