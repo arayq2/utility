@@ -5,7 +5,6 @@
 
 namespace Utility
 {
-
     /**
      * TimedEvent.
      * Notification subject to a timeout.  Notifier is returned 
@@ -22,7 +21,8 @@ namespace Utility
         {
             SpinLock    _lock(flag_);
             complete_ = true;
-            promise_.set_value();
+            try { promise_.set_value(); }
+            catch ( std::future_error& ) { return true; }
             return expired_;
         }
         // called by waiter (consumer)
