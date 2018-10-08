@@ -22,27 +22,27 @@ namespace Utility
         : future_(promise_.get_future())
         {}
         // called by notifier (producer)
-        bool expired()
+        bool cancelled()
         {
             SpinLock    _lock(flag_);
             completed_ = true;
             try { promise_.set_value(); }
             catch ( std::future_error& ) {}
-            return expired_;
+            return cancelled_;
         }
         // called by waiter (consumer)
         bool completed( unsigned millis )
         {
             future_.wait_for( std::chrono::milliseconds(millis) );
             SpinLock    _lock(flag_);
-            expired_ = true;
+            cancelled_ = true;
             return completed_;
         }
         
         bool reset()
         {
             SpinLock    _lock(flag_);
-            if ( !expired_ or !completed_ ) { return false; }
+            if ( !cancelled_ or !completed_ ) { return false; }
             promise_ = std::promise<void>();
             future_ = promise_.get_future();
             return true;
@@ -51,7 +51,7 @@ namespace Utility
     private:
         std::atomic_flag    flag_{ATOMIC_FLAG_INIT};
         bool                completed_{false};
-        bool                expired_{false};
+        bool                cancelled_{false};
         std::promise<void>  promise_;
         std::future<void>   future_;
     };

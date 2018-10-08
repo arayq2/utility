@@ -45,7 +45,7 @@ namespace Utility
         void operator()( Args&&... args )
         {
             Methods::acquire( result_, std::forward<Args>(args)... );
-            if ( window_.expired() ) { Methods::release( result_ ); }
+            if ( window_.cancelled() ) { Methods::release( result_ ); }
         }
         
         // consumer thread; effective unit: milliseconds
