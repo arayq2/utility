@@ -122,6 +122,12 @@
         }
 
     // output
+        VarDate& get( int &yr, int &mo, int &da )
+        {
+            yr = y_; mo = m_; da = d_;
+            return *this;
+        }
+
         double variantDate() const
         {
             return (double) (datum_ - VARDATE_ZERO);
