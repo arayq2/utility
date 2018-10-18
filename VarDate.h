@@ -322,12 +322,12 @@
 
     };
 
-#include <stdio.h>
+#include <time.h>
 
     class FormatDate
     {
     public: 
-        enum Style { BLANK = 0, Y4MD, DMY_US, DMY_US0, DMY_EU, DMY_EU0, LITMO, ISO };
+        enum Style { BLANK = 0, Y4MD, DMY_US, DMY_EU, LITMO, ISO };
 
         FormatDate(VarDate const& vdate, Style style = Y4MD) { format_( vdate, style ); }
         
@@ -340,28 +340,16 @@
         
         size_t format_( VarDate const& vd, Style style )
         {
+            struct tm   _tm{0, 0, 0, vd.d_, vd.m_ - 1, vd.y_ - 1900};
             switch ( style )
             {
             default:
-            case Y4MD:    return sprintf( buf_, "%4d%02d%02d", vd.y_, vd.m_, vd.d_ );
-            case DMY_US:  return sprintf( buf_, "%2d/%2d/%4d", vd.m_, vd.d_, vd.y_ );
-            case DMY_US0: return sprintf( buf_, "%02d/%02d/%4d", vd.m_, vd.d_, vd.y_ );
-            case DMY_EU:  return sprintf( buf_, "%2d/%2d/%4d", vd.d_, vd.m_, vd.y_ );
-            case DMY_EU0: return sprintf( buf_, "%02d/%02d/%4d", vd.d_, vd.m_, vd.y_ );
-            case LITMO:   return sprintf( buf_, "%02d-%3s-%4d", vd.d_, month_( vd.m_ ), vd.y_ );
-            case ISO:     return sprintf( buf_, "%4d-%02d-%02d", vd.y_, vd.m_, vd.d_ );
-            }
-        }
-        
-        char const* month_( int month ) const
-        {
-            switch ( month )
-            {
-            case  1: return "Jan"; case  2: return "Feb"; case  3: return "Mar";
-            case  4: return "Apr"; case  5: return "May"; case  6: return "Jun";
-            case  7: return "Jul"; case  8: return "Aug"; case  9: return "Sep";
-            case 10: return "Oct"; case 11: return "Nov"; case 12: return "Dec";
-            default: return "???"; // should never happen
+            case Y4MD:    return strftime( buf_, B_SIZE, "%Y%m%d", &_tm );
+            case DMY_US:  return strftime( buf_, B_SIZE, "%m/%d/%Y", &_tm );
+            case DMY_EU:  return strftime( buf_, B_SIZE, "%d/%m/%Y", &_tm );
+            case LITMO:   return strftime( buf_, B_SIZE, "%d-%b-%Y", &_tm );
+            case ISO:     return strftime( buf_, B_SIZE, "%Y-%m-%d", &_tm );
+               
             }
         }
     };
