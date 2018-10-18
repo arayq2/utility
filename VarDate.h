@@ -122,11 +122,13 @@
         }
 
     // output
-        VarDate& get( int &yr, int &mo, int &da )
+        template<typename Y, typename M, typename D> // various kinds of int
+        VarDate& get( Y& yr, M& mo, D& da )
         {
-            yr = y_; mo = m_; da = d_;
+            yr = (Y)y_; mo = (M)m_; da = (D)d_;
             return *this;
         }
+
 
         double variantDate() const
         {
