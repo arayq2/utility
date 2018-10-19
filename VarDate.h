@@ -3,7 +3,8 @@
 
     /**
      * VarDate. (Variant Date) 
-     * Copyright 2004-2016 Arjun Ray.
+     * Copyright 2004-2018 Arjun Ray.
+     * Released under MIT License.  See LICENSE.txt.
      *
      * Excel and COM share the "VARIANT date" definition, which 
      * originally had the bug of treating 1900 as a leap year. 
@@ -125,7 +126,7 @@
         template<typename Y, typename M, typename D> // various kinds of int
         VarDate& get( Y& yr, M& mo, D& da )
         {
-            yr = (Y)y_; mo = (M)m_; da = (D)d_;
+            yr = y_; mo = m_; da = d_;
             return *this;
         }
 
