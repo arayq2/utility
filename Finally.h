@@ -30,6 +30,9 @@ namespace Utility
     private:
         Action  action_;
         bool    cancelled_{false};
+
+        Finally(Finally&) = delete;
+        Finally& operator=( Finally const& ) = delete;
     };
 
 } // namespace Utility
