@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SpinLock.h"
+#include "FlipFlop.h"
 #include <future>
 
 namespace Utility
@@ -22,36 +22,29 @@ namespace Utility
         ~TimedEvent() noexcept = default;
 
         // called by notifier (producer)
-        bool cancelled()
+        bool is_cancelled()
         {
-            SpinLock    _lock(flag_);
-            completed_ = true;
-            try { promise_.set_value(); }
-            catch ( std::future_error& ) {}
-            return cancelled_;
+            if ( switch_.flip() ) { return true; }
+            try { promise_.set_value(); } catch ( std::future_error& ) {}
+            return false;
         }
         // called by waiter (consumer)
-        bool completed( unsigned millis )
+        bool is_completed( unsigned millis )
         {
             promise_.get_future().wait_for( std::chrono::milliseconds(millis) );
-            SpinLock    _lock(flag_);
-            cancelled_ = true;
-            return completed_;
+            return switch_.flop();
         }
         
         bool reset()
         {
-            SpinLock    _lock(flag_);
-            if ( !cancelled_ or !completed_ ) { return false; }
+            if ( !switch_.reset() ) { return false; }
             promise_ = std::promise<void>();
             return true;
         }
 
     private:
-        std::atomic_flag    flag_{ATOMIC_FLAG_INIT};
-        bool                completed_{false};
-        bool                cancelled_{false};
         std::promise<void>  promise_;
+        FlipFlop            switch_;
     };
 
 } // namespace Utility
