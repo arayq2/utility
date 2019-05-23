@@ -45,13 +45,13 @@ namespace Utility
         void operator()( Args&&... args )
         {
             Methods::acquire( result_, std::forward<Args>(args)... );
-            if ( window_.cancelled() ) { Methods::release( result_ ); }
+            if ( window_.is_cancelled() ) { Methods::release( result_ ); }
         }
         
         // consumer thread; effective unit: milliseconds
         Result wait( unsigned seconds, unsigned multiplier = 1000 )
         {
-            return window_.completed( multiplier * seconds )
+            return window_.is_completed( multiplier * seconds )
             ? result_
             : Methods::null_value()
             ;
