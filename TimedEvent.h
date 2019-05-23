@@ -18,9 +18,9 @@ namespace Utility
     class TimedEvent
     {
     public:
-        TimedEvent()
-        : future_(promise_.get_future())
-        {}
+        TimedEvent() = default;
+        ~TimedEvent() noexcept = default;
+
         // called by notifier (producer)
         bool cancelled()
         {
@@ -33,7 +33,7 @@ namespace Utility
         // called by waiter (consumer)
         bool completed( unsigned millis )
         {
-            future_.wait_for( std::chrono::milliseconds(millis) );
+            promise_.get_future().wait_for( std::chrono::milliseconds(millis) );
             SpinLock    _lock(flag_);
             cancelled_ = true;
             return completed_;
@@ -44,7 +44,6 @@ namespace Utility
             SpinLock    _lock(flag_);
             if ( !cancelled_ or !completed_ ) { return false; }
             promise_ = std::promise<void>();
-            future_ = promise_.get_future();
             return true;
         }
 
@@ -53,7 +52,6 @@ namespace Utility
         bool                completed_{false};
         bool                cancelled_{false};
         std::promise<void>  promise_;
-        std::future<void>   future_;
     };
 
 } // namespace Utility
