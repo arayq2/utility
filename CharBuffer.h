@@ -41,7 +41,7 @@ namespace Utility
         }
 
         //! Formatting constructor. Inspiration for this class!
-        template<typename... Arg
+        template<typename... Args>
         CharBuffer(char const* fmt, Args&&... args)
         {
             format( fmt, std::forward<Args>(args)... );
