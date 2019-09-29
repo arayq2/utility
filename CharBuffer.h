@@ -17,9 +17,9 @@ namespace Utility
      * Buffer for strings formatted on the fly.
      * Note: no CharBuffer(char const*, std::size_t) constructor, by design.
      * - Formatting constructor is very greedy in overload resolution,
-     *   would dominate for all implicit conversions to std::size_t!
-     * - Integral value formatted into string is a common use case.
-     * - Use CharBuffer(int_type, char const*) constructor instead.
+     *   it would dominate all implicit conversions to std::size_t!
+     * - Integral value formatted into a string is a common use case.
+     * - CharBuffer(int_type, char const*) constructor is an alternative.
      */
     template<typename std::size_t SIZE>
     class CharBuffer
@@ -40,17 +40,11 @@ namespace Utility
             copy_( source.c_str() );
         }
 
-        //! Formatting constructor. Inspiration for this class!
+        //!> Formatting constructor. Inspiration for this class!
         template<typename... Args>
         CharBuffer(char const* fmt, Args&&... args)
         {
             format( fmt, std::forward<Args>(args)... );
-        }
-
-        template<typename T, typename std::enable_if<std::is_integral<T>::value, T>::type* = nullptr>
-        CharBuffer(T len, char const* ptr)
-        {
-            copy_( ptr, len );
         }
 
         template<typename Function, typename... Args>
@@ -58,6 +52,20 @@ namespace Utility
         {
             apply( function, std::forward<Args>(args)... );
         }
+
+        //!> Sources larger than (SIZE - 1) are truncated.
+        template<typename T, typename std::enable_if<std::is_integral<T>::value, T>::type* = nullptr>
+        CharBuffer(T len, char const* ptr)
+        {
+            copy_( ptr, len );
+        }
+
+
+        char*       get()       { return buf_; }
+        char const* get() const { return buf_; }
+
+        std::size_t size() const { return ::strlen( buf_ ); }
+
 
         template<typename... Args>
         CharBuffer& format( char const* fmt, Args&&... args )
@@ -91,11 +99,6 @@ namespace Utility
         {
             return operator=( source.c_str() );
         }
-
-        char*       get()       { return buf_; }
-        char const* get() const { return buf_; }
-
-        std::size_t size() const { return ::strlen( buf_ ); }
 
     private:
         char    buf_[SIZE];
