@@ -12,14 +12,13 @@ namespace Utility
     class AsynchMatcher
     : private Lockable
     {
-    public:
         using Promise = std::promise<ValueType>;
         using Map     = std::map<std::string, Promise>;
+    public:
         using Future  = std::future<ValueType>;
         
-        AsynchMatcher()
-        : map_()
-        {}
+        ~AsynchMatcher() = default;
+        AsynchMatcher() = default;
         
         Future reserve( std::string const& key )
         {
@@ -27,8 +26,27 @@ namespace Utility
             auto    _itr(map_.insert( std::make_pair( key, Promise() ) ).first);
             return _itr->second.get_future();
         }
-        
-        bool fulfill( std::string const& key, ValueType&& value )
+
+        // for void ValueType only
+        template<typename Ret = typename std::enable_if<std::is_void<ValueType>::value, bool>::type>
+        Ret fulfill( std::string const& key )
+        {
+            AUTOLOCK();
+            auto    _itr(map_.find( key ));
+            
+            if ( _itr != map_.end() )
+            {
+                _itr->second.set_value();
+                map_.erase( _itr );
+                return true;
+            }
+            return false;
+        }
+
+        // for non-void ValueType only
+        template<typename VT = ValueType>
+        typename std::enable_if<!std::is_void<VT>::value, bool>::type
+        fulfill( std::string const& key, VT&& value )
         {
             AUTOLOCK();
             auto    _itr(map_.find( key ));
