@@ -36,10 +36,10 @@ namespace Utility
             return flip_;
         }
 
-        bool reset()
+        bool reset( bool force = false )
         {
             SpinLock    _lock(flag_);
-            if ( !flip_ or !flop_ ) { return false; }
+            if ( !force and (!flip_ or !flop_) ) { return false; }
             flip_ = flop_ = false;
             return true;
         }

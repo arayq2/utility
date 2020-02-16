@@ -35,9 +35,9 @@ namespace Utility
             return switch_.flop();
         }
         
-        bool reset()
+        bool reset( bool force = false )
         {
-            if ( !switch_.reset() ) { return false; }
+            if ( !switch_.reset( force ) ) { return false; }
             promise_ = std::promise<void>();
             return true;
         }

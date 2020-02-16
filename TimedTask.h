@@ -57,9 +57,9 @@ namespace Utility
             ;
         }
         
-        bool reset()
+        bool reset( bool force = false )
         {
-            if ( window_.reset() )
+            if ( window_.reset( force ) )
             {
                 result_ = Methods::init_value();
                 return true;
