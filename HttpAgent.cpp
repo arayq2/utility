@@ -21,6 +21,11 @@ namespace http
         std::call_once( curlInit, [](){ ::curl_global_init( CURL_GLOBAL_ALL ); } );
     }
 
+	Agent::~Agent()
+	{
+		::curl_easy_cleanup( curl_ );
+	}
+
     Agent::Agent(std::ostream& os, bool keepeol)
     : osi_(os)
     , curl_(::curl_easy_init())
