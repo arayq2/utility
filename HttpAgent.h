@@ -21,7 +21,7 @@ namespace http
         using Iterator = std::ostream_iterator<char>;
     public:
         using Headers = std::vector<std::string>;
-        ~Agent();
+        ~Agent() noexcept;
         explicit
         Agent(std::ostream& os, bool keepeol = false);
 

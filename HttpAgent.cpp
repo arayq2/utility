@@ -21,7 +21,7 @@ namespace http
         std::call_once( curlInit, [](){ ::curl_global_init( CURL_GLOBAL_ALL ); } );
     }
 
-	Agent::~Agent()
+	Agent::~Agent() noexcept
 	{
 		::curl_easy_cleanup( curl_ );
 	}
