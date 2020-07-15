@@ -22,14 +22,16 @@ namespace Utility
         ~TimedEvent() noexcept = default;
 
         // called by notifier (producer)
-        bool is_cancelled()
+        using IsCancelled = bool;
+        IsCancelled notify()
         {
             if ( switch_.flip() ) { return true; }
             try { promise_.set_value(); } catch ( std::future_error& ) {}
             return false;
         }
         // called by waiter (consumer)
-        bool is_completed( unsigned millis )
+        using IsCompleted = bool;
+        IsCompleted wait( unsigned millis )
         {
             promise_.get_future().wait_for( std::chrono::milliseconds(millis) );
             return switch_.flop();
