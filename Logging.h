@@ -55,7 +55,7 @@
 
 #include "CharBuffer.h"
 #define LOG_COMMIT_FORMAT(T, ...) \
-    using Buffer = Utility::CharBuffer<2048>; \
-    Utility::Log::commit( T, LOCATION(), Buffer(__VA_ARGS__).get() )
+    using Log_Buffer = Utility::CharBuffer<2048>; \
+    Utility::Log::commit( T, LOCATION(), Log_Buffer(__VA_ARGS__).get() )
 
 #endif // UTILITY_LOGGING_H

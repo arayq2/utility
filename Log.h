@@ -32,6 +32,17 @@ namespace Utility
 
 //==========================================================================
 
+#define LOG_LEVELS(X) \
+	X(ALL) \
+	X(DEBUG) \
+	X(INFO) \
+	X(WARN) \
+	X(ERROR) \
+	X(FATAL) \
+	X(OFF)
+
+#define ENUMLEVEL(lvl, ...)		lvl,
+
     class Logger; // forward declaration to untangle mutual dependencies
 
     class Log
@@ -40,9 +51,7 @@ namespace Utility
         enum class Level
         : uint32_t
         {
-            ALL,
-            DEBUG, INFO, WARN, ERROR, FATAL,
-            OFF
+			LOG_LEVELS(ENUMLEVEL)
         };
 
         struct Token
@@ -54,6 +63,10 @@ namespace Utility
             explicit operator bool() const { return nullptr != impl_; }
         };
 
+		static Token is_active( std::nullptr_t, Log::Level level )
+		{
+			return {nullptr, (is_active( level ) ? level : Log::Level::OFF)};
+		}
         static Token is_active( Logger const*, Log::Level ); 
         static Token is_active( Logger const&, Log::Level );
         //

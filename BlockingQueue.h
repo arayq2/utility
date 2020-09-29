@@ -83,15 +83,15 @@ namespace Utility
             return true;
         }
         
-        template<typename Handler>
-        void pump( Handler&& handler )
+        template<typename Handler, typename... Args>
+        void pump( Handler&& handler, Args&&... args )
         {
             // while ( pop( _item ) ) { handler( _item ); }
             // would delay ~Item() invocation.
             while ( true )
             {
                 Item    _item;
-                if ( pop( _item ) ) { handler( _item ); }
+                if ( pop( _item ) ) { handler( _item, std::forward<Args>(args)... ); }
                 else                { break; }
             }
         }
@@ -104,22 +104,20 @@ namespace Utility
         {
         public:
             Worker(BlockingQueue& queue, Action&& action, Monitor& monitor)
-            : queue_(queue)
+            : queue_(&queue)
             , action_(std::move(action))
             , monitor_(monitor)
             {}
             
-            void operator() ()
+			template<typename... Args>
+            void operator()( Args&&... args )
             {
-                queue_.pump( [this]( Item& item )
-                {
-                   action_( std::move(item) );
-                   MonitorMethods<Monitor>::signal( monitor_ );
-                } );
+                queue_->pump( action_, std::forward<Args>(args)... );
+                MonitorMethods<Monitor>::signal( monitor_ );
             }
 
         private:
-            BlockingQueue&  queue_;
+            BlockingQueue*  queue_;
             Action          action_;
             Monitor&        monitor_;
         };
@@ -129,20 +127,18 @@ namespace Utility
         {
         public:
             Worker(BlockingQueue& queue, Action&& action)
-            : queue_(queue)
+            : queue_(&queue)
             , action_(std::move(action))
             {}
             
-            void operator() ()
+			template<typename... Args>
+            void operator()( Args&&... args )
             {
-                queue_.pump( [this]( Item& item )
-                {
-                   action_( std::move(item) );
-                } );
+                queue_->pump( action_, std::forward<Args>(args)... );
             }
 
         private:
-            BlockingQueue&  queue_;
+            BlockingQueue*  queue_;
             Action          action_;
         };
     
