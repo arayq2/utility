@@ -37,7 +37,7 @@ namespace Utility
         {}
 
         //!> returns to producer: whether consumer has abandoned waiting.
-        bool transfer( Payload&& pl )
+        bool transfer( Payload& pl )
         {
             Guard   _guard(*mp_);
             if ( !canceled_ )
@@ -96,7 +96,7 @@ namespace Utility
         Box* acquire( Key const& key )
         {
             Guard   _guard(mx_);
-            auto    _itr(map_.emplace( std::make_pair( key, {chr::system_clock::now(), &mx_} ) ));
+            auto    _itr(map_.emplace( {key, {chr::system_clock::now(), &mx_}} ));
             return &_itr.first->second.second;
         }
 
