@@ -25,7 +25,7 @@ namespace Utility
 		return _oss.str();
 	}
 
-#define ENUM2STR(lvl, ...)	case Log::level::lvl : return #lvl;
+#define ENUM2STR(lvl, ...)	case Log::Level::lvl : return #lvl;
 	char const*
 	Log::level_string( Log::Level const& level )
 	{
@@ -42,7 +42,7 @@ namespace Utility
 	}
 
 	Logger::Logger(char const* name)
-	: Logger(name, Log::get_log_level())
+	: Logger(name, Log::get_global_level())
 	{}
 	Logger::Logger(char const* name, Log::Level level)
 	: name_(name)
@@ -51,9 +51,9 @@ namespace Utility
 	{}
 
 	Log::Token
-	Logger::is_enabled( Log::Level level )
+	Logger::is_active( Log::Level level ) const
 	{
-		auto	_tok(LogImpl::is_enabled( impl_, level ));
+		auto	_tok(LogImpl::is_active( impl_, level ));
 		return {_tok, (_tok == nullptr ? Log::Level::OFF : level)};
 	}
 
@@ -66,10 +66,10 @@ namespace Utility
 
 	namespace
 	{
-		std::oftsream	ofs;
+		std::ofstream	ofs;
 		std::ostream*	outp = &std::cerr;
 
-#define STR2ENUM(lvl, ...)	{ #lvl, Log::Level::lvl }.
+#define STR2ENUM(lvl, ...)	{ #lvl, Log::Level::lvl },
 
 		std::map<std::string, Log::Level>	levelMap =
 		{
@@ -79,12 +79,41 @@ namespace Utility
 		//default, 
 		void default_commit( char const* level, Location const& loc, char const* msg )
 		{
+            LocalTime   _now;
+            // Format: Timestamp|Level|ID|Message (Location)
+            *outp << Utility::CharBuffer<2048>("%4d-%02d-%02dT%02d:%02d:%02d.%06ld|%5s|%6d|%s (%s@%s:%d)\n"
+                , (_now.tm_.tm_year + 1900), (_now.tm_.tm_mon + 1), _now.tm_.tm_mday
+                , _now.tm_.tm_hour, _now.tm_.tm_min, _now.tm_.tm_sec, (_now.ts_.tv_nsec /1000)
+                , level
+                , ::syscall( SYS_gettid )
+                , msg
+                , loc.func_, loc.file_, loc.line_)
+                .get();
 		}
 	} // namespace anonymous
 
 	bool
 	Log::set_default_log( char const* filename, bool append )
 	{
+        if ( filename )
+        {
+            // Should improve this to use direct swap.
+            ofs.close();
+            ofs.open( filename, append ? std::ios_base::out | std::ios_base::app : std::ios_base::out );
+            if ( ofs )
+            {
+                outp = &ofs;
+                return true;
+            }
+            outp = &std::cerr;
+            return false;
+        }
+        else // restore default
+        {
+            ofs.close();
+            outp = &std::cerr;
+        }
+        return true;
 	}
 
 	bool
@@ -92,7 +121,7 @@ namespace Utility
 	{
 		auto	_itr(levelMap.find( level ));
 		if ( _itr == levelMap.end() ) { return false; }
-		globalLevel = _itr.second;
+		globalLevel = _itr->second;
 		return true;
 	}
 
@@ -109,5 +138,6 @@ namespace Utility
 		}
 	}
 
+    Log::Level Log::globalLevel = Log::Level::INFO;
 } // namespace Utility
 

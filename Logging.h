@@ -5,7 +5,7 @@
 
 #include "Log.h"
 
-#define LOCATION()  Utility::Location({__FUNCTION__, __FILE__, __LINE__})
+#define LOCATION()  Utility::Location({__FUNCTION__, Utility::base_name(__FILE__), __LINE__})
 
 // For message construction using insertion syntax. Example:
 //    LOG_STREAM(logger, Utility::Log::Level::INFO, "my message: " << myarg);
