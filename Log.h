@@ -32,28 +32,28 @@ namespace Utility
     };
 
 //==========================================================================
-	/* basename at compile time */
-	constexpr
-	char const* last_mark( char const* str, char const* mark )
-	{
-		return *str == '\0' ? mark : last_mark( str + 1, *str == '/' ? (str + 1) : mark );
-	}
+    /* basename at compile time */
+    constexpr
+    char const* last_mark( char const* str, char const* mark )
+    {
+        return *str == '\0' ? mark : last_mark( str + 1, *str == '/' ? (str + 1) : mark );
+    }
 
-	constexpr
-	char const* base_name( char const* str ) { return last_mark( str, str ); }
+    constexpr
+    char const* base_name( char const* str ) { return last_mark( str, str ); }
 
 //==========================================================================
 
 #define LOG_LEVELS(X) \
-	X(ALL) \
-	X(DEBUG) \
-	X(INFO) \
-	X(WARN) \
-	X(ERROR) \
-	X(FATAL) \
-	X(OFF)
+    X(ALL) \
+    X(DEBUG) \
+    X(INFO) \
+    X(WARN) \
+    X(ERROR) \
+    X(FATAL) \
+    X(OFF)
 
-#define ENUMLEVEL(lvl, ...)		lvl,
+#define ENUMLEVEL(lvl, ...)     lvl,
 
     class Logger; // forward declaration to untangle mutual dependencies
 
@@ -63,7 +63,7 @@ namespace Utility
         enum class Level
         : uint32_t
         {
-			LOG_LEVELS(ENUMLEVEL)
+            LOG_LEVELS(ENUMLEVEL)
         };
 
         struct Token
@@ -79,10 +79,10 @@ namespace Utility
             explicit operator bool() const { return level_ != Level::OFF; }
         };
 
-		static Token is_active( std::nullptr_t, Log::Level level )
-		{
-			return {nullptr, (is_active( level ) ? level : Log::Level::OFF)};
-		}
+        static Token is_active( std::nullptr_t, Log::Level level )
+        {
+            return {nullptr, (is_active( level ) ? level : Log::Level::OFF)};
+        }
         static Token is_active( Logger const*, Log::Level ); 
         static Token is_active( Logger const&, Log::Level );
         //
@@ -92,6 +92,7 @@ namespace Utility
         static bool is_active( Level lvl ) { return lvl >= globalLevel; }
         static char const* level_string( Level const& lvl );
         //
+        static bool set_unique_log( char const* basename, char const* dir = "/tmp" );
         static bool set_default_log( char const* filename, bool append );
         static void commit( Token const&, Location const&, char const* );
 
