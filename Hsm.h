@@ -35,8 +35,8 @@ namespace Utility
          *
          * Client instantiates one for each state and specifies hierarchy
          * via the super_ pointer.
-         * A special top class has no superclass, defaults all input, and
-         * is the starting point of the machine.
+         * A special top class has no super-state, defaults all input,
+         * and is the starting point of the machine.
          */
         class State
         {
@@ -51,6 +51,7 @@ namespace Utility
             {}
             //
             State* super() const { return super_; }
+
         private:
             State*      super_;
             char const* name_;
@@ -83,6 +84,7 @@ namespace Utility
                 if ( _itr != map_.end() ) { return _itr->second; }
                 return map_[_pr] = compute_lca_( from, to );
             }
+
         private:
             Map     map_;
             //
@@ -130,7 +132,7 @@ namespace Utility
             }
         }
 
-    protected:  // called from subclass (concrete machine)
+    protected: // called from subclass (concrete machine)
         void STATE_START( State* target )
         {
             assert( nullptr == nxtp_ );
@@ -152,9 +154,10 @@ namespace Utility
         State*      curp_{nullptr};
         State*      nxtp_{nullptr};
         LcaCache    cache_;
+
         // pre-transition: invoke exit processing
         void leave_( int steps )
-        {   // fire leave for each state in super chain, bottom up
+        {   // fire leave msg for each state in super chain, bottom up
             State*  _st = curp_;
             //
             while ( _st != srcp_ )
@@ -169,9 +172,10 @@ namespace Utility
             }
             curp_ = _st;
         }
+
         // post-transition: invoke entry processing
         void enter_()
-        {   // fire enter for each state in super chain, top down
+        {   // fire enter msg for each state in super chain, top down
             State*  _path[MAX_LEVELS];
             State** _trace = _path;
             *_trace = nullptr;
@@ -188,6 +192,7 @@ namespace Utility
             curp_ = nxtp_;
             nxtp_ = nullptr;
         }
+
         // check for transition
         void maybe_transit_()
         {
