@@ -35,7 +35,7 @@ namespace Utility
          *
          * Client instantiates one for each state and specifies hierarchy
          * via the super_ pointer.
-         * A special top class has no super-state, defaults all input,
+         * A special top state has no super-state, defaults all input,
          * and is the starting point of the machine.
          */
         class State
