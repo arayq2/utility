@@ -6,6 +6,12 @@
     /**
      * @file Hsm.h
      * @brief HSM implementation by Stefan Heinzmann.
+     * Key concepts:
+     * (1) All event processing starts in a leaf state.
+     * (2) The "init" event of a composite state must
+           transition internally to a sub-state.
+     * (3) The "init" event in a leaf state must set itself
+     *     as the target of the next call to dispatch.
      */
 
     // template arg: concrete machine (host)
@@ -15,8 +21,20 @@
         using Base = void;
         using Host = H;
         //
-        virtual void handler( Host& ) const = 0;
+        virtual bool handler( Host& ) const = 0;
         virtual unsigned getId() const = 0;
+    };
+
+    // concrete machine derives from this (CRTP)
+    template<typename H>
+    class Dispatcher
+    {
+    public:
+        void next( TopState<H> const& s ) { state_ = &s; }
+        bool dispatch() { return state_->handler( static_cast<H&>(*this) ); }
+
+    private:
+      TopState<H> const*    state_{nullptr};
     };
 
     template<typename H, unsigned id, typename BaseState>
@@ -30,7 +48,7 @@
         using This = CompState<H, 0, Base>;
         //
         template <typename X>
-        void handle( H&, const X& ) const {} // discard event
+        bool handle( H&, const X& ) const { return false; } // discard event
         //
         static void init( H& ); // no default implementation
         static void entry( H& ) {}
@@ -45,7 +63,7 @@
       using This = CompState<H, id, Base>;
       //
       template<typename X>
-      void handle( H& h, const X& x ) const { Base::handle( h, x ); }
+      bool handle( H& h, const X& x ) const { return Base::handle( h, x ); }
       //
       static void init( H& ); // no default implementation
       static void entry( H& ) {}
@@ -61,12 +79,12 @@
       using This = LeafState<H,id,Base>;
       //
       template<typename X>
-      void handle( H& h, const X& x ) const { Base::handle( h, x ); }
+      bool handle( H& h, const X& x ) const { return Base::handle( h, x ); }
       //
-      virtual void handler( H& h ) const override { handle( h, *this ); }
+      virtual bool handler( H& h ) const override { return handle( h, *this ); }
       virtual unsigned getId() const override { return id; }
       //
-      static void init( H& h ) { h.next( obj ); } // don't specialize this
+      static void init( H& h ) { h.next( obj ); } // do not specialize this
       static void entry( H& ) {}
       static void exit( H& ) {}
 
@@ -87,7 +105,7 @@
         enum { Res = sizeof(Test(static_cast<D*>(0))) == sizeof(Yes) ? 1 : 0 };
     };
     
-    template<bool> struct Bool{};
+    template<bool> struct Bool{}; // discriminator for recursion
 
     template<typename C, typename S, typename T> // Current, Source, Target
     struct Tran
@@ -105,11 +123,7 @@
             exitStop  = eTB_CB && eS_C,
             entryStop = eS_C || eS_CB && !eC_S
         };
-        // We use overloading to stop recursion. The
-        // more natural template specialization
-        // method would require to specialize the
-        // inner template without specializing the
-        // outer one, which is forbidden.
+        // Overloading to end recursion.
         static void exitActions( Host&, Bool<true> ) {}
         static void exitActions( Host& h, Bool<false> )
         {
@@ -123,12 +137,13 @@
             Tran<CurrentBase, S, T>::entryActions( h, Bool<entryStop>() );
             C::entry( h );
         }
-        //
+        // exit sequence in constructor, bottom up
         Tran(Host& h)
         : host_(h)
         {
             exitActions( host_, Bool<false>() );
         }
+        // entry sequence in destructor, top down
         ~Tran()
         {
             Tran<T,S,T>::entryActions( host_, Bool<false>() );

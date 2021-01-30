@@ -17,7 +17,7 @@
       void next( const TopState<Host>& state ) { state_ = &state; }
       //
       Signal getSig() const { return sig_; }
-      void dispatch( Signal sig ) { sig_ = sig; state_->handler( *this ); }
+      bool dispatch( Signal sig ) { sig_ = sig; return state_->handler( *this ); }
       //
       void foo( int i ) { foo_ = i; }
       int foo() const { return foo_; }
@@ -63,85 +63,85 @@
     template<> inline void S211::exit( Host& ) { printf("s211-EXIT;"); }
 
     template<>
-    template<typename X> inline void
+    template<typename X> inline bool
     S0::handle( Host& h, const X& x ) const
     {
         switch ( h.getSig() )
         {
-        case E_SIG: { Tran<X, This, S211> t(h); printf("s0-E;"); return; }
+        case E_SIG: { Tran<X, This, S211> t(h); printf("s0-E;"); return true; }
         default: break;
         }
-        Base::handle( h, x );
+        return Base::handle( h, x );
     }
 
     template<>
-    template<typename X> inline void
+    template<typename X> inline bool
     S1::handle( Host& h, const X& x ) const
     {
         switch( h.getSig() )
         {
-        case A_SIG: { Tran<X, This, S1> t(h); printf("s1-A;"); return; }
-        case B_SIG: { Tran<X, This, S11> t(h); printf("s1-B;"); return; }
-        case C_SIG: { Tran<X, This, S2> t(h); printf("s1-C;"); return; }
-        case D_SIG: { Tran<X, This, S0> t(h); printf("s1-D;"); return; }
-        case F_SIG: { Tran<X, This, S211> t(h); printf("s1-F;"); return; }
+        case A_SIG: { Tran<X, This, S1> t(h); printf("s1-A;"); return true; }
+        case B_SIG: { Tran<X, This, S11> t(h); printf("s1-B;"); return true; }
+        case C_SIG: { Tran<X, This, S2> t(h); printf("s1-C;"); return true; }
+        case D_SIG: { Tran<X, This, S0> t(h); printf("s1-D;"); return true; }
+        case F_SIG: { Tran<X, This, S211> t(h); printf("s1-F;"); return true; }
         default: break;
         }
-        Base::handle( h, x );
+        return Base::handle( h, x );
     }
 
     template<>
-    template<typename X> inline void
+    template<typename X> inline bool
     S11::handle( Host& h, const X& x ) const
     {
         switch( h.getSig() )
         {
-        case G_SIG: { Tran<X, This, S211> t(h); printf("s11-G;"); return; }
-        case H_SIG: if(h.foo()) { printf("s11-H;"); h.foo( 0 ); return;
+        case G_SIG: { Tran<X, This, S211> t(h); printf("s11-G;"); return true; }
+        case H_SIG: if(h.foo()) { printf("s11-H;"); h.foo( 0 ); return true;
                     } break;
         default: break;
         }
-        Base::handle( h, x );
+        return Base::handle( h, x );
     }
 
     template<>
-    template<typename X> inline void
+    template<typename X> inline bool
     S2::handle( Host& h, const X& x ) const
     {
         switch( h.getSig() )
         {
-        case C_SIG: { Tran<X, This, S1> t(h); printf("s2-C;"); return; }
-        case F_SIG: { Tran<X, This, S11> t(h); printf("s2-F;"); return; }
+        case C_SIG: { Tran<X, This, S1> t(h); printf("s2-C;"); return true; }
+        case F_SIG: { Tran<X, This, S11> t(h); printf("s2-F;"); return true; }
         default: break;
         }
-        Base::handle( h, x );
+        return Base::handle( h, x );
     }
  
     template<>
-    template<typename X> inline void
+    template<typename X> inline bool
     S21::handle( Host& h, const X& x ) const
     {
         switch( h.getSig() )
         {
-        case B_SIG: { Tran<X, This, S211> t(h); printf("s21-B;"); return; }
-        case H_SIG: if( !h.foo() ) { Tran<X, This, S21> t(h); printf("s21-H;"); h.foo( 1 ); return;
+        case B_SIG: { Tran<X, This, S211> t(h); printf("s21-B;"); return true; }
+        case H_SIG: if( !h.foo() ) { Tran<X, This, S21> t(h); printf("s21-H;"); h.foo( 1 ); return true;
                     } break;
         default: break;
         }
-        Base::handle( h, x );
+        return Base::handle( h, x );
     }
 
     template<>
-    template<typename X> inline void
+    template<typename X> inline bool
     S211::handle( Host& h, const X& x ) const
     {
         switch( h.getSig() )
         {
-        case D_SIG: { Tran<X, This, S21> t(h); printf("s211-D;"); return; }
-        case G_SIG: { Tran<X, This, S0> t(h); printf("s211-G;"); return; }
+        case D_SIG: { Tran<X, This, S21> t(h); printf("s211-D;"); return true; }
+        case G_SIG: { Tran<X, This, S0> t(h); printf("s211-G;"); return true; }
         default: break;
         }
-        Base::handle( h, x );
+        return Base::handle( h, x );
     }
 
 
@@ -153,7 +153,9 @@
             printf("\nSignal<-");
             char c = getc( stdin );
             getc( stdin ); // discard '\n'
-            if( c < 'a' || 'h' < c ) { return 0; }
-            test.dispatch( (Signal)(c-'a') );
+            if( c < 'a' || 'h' < c ) { break; }
+            if ( !test.dispatch( (Signal)(c-'a') ) )
+                printf( "[Discarded!]" );
         }
+        return 0;
     }
