@@ -9,23 +9,21 @@
 
     // state machine
     class Host
+    : public Dispatcher<Host>
     {
     public:
-      Host(); // needs concrete definitions of states
-      ~Host() {}
-      //
-      void next( const TopState<Host>& state ) { state_ = &state; }
-      //
-      Signal getSig() const { return sig_; }
-      bool dispatch( Signal sig ) { sig_ = sig; return state_->handler( *this ); }
-      //
-      void foo( int i ) { foo_ = i; }
-      int foo() const { return foo_; }
+        Host(); // needs concrete definitions of states
+        ~Host() {}
+        //
+        bool onSig( Signal sig ) { sig_ = sig; dispatch(); }
+        Signal getSig() const { return sig_; }
+        //
+        void foo( int i ) { foo_ = i; }
+        int foo() const { return foo_; }
 
     private:
-      const TopState<Host>* state_;
-      Signal                sig_;
-      int                   foo_;
+      Signal    sig_;
+      int       foo_;
     };
 
     // states
@@ -154,7 +152,7 @@
             char c = getc( stdin );
             getc( stdin ); // discard '\n'
             if( c < 'a' || 'h' < c ) { break; }
-            if ( !test.dispatch( (Signal)(c-'a') ) )
+            if ( !test.onSig( (Signal)(c-'a') ) )
                 printf( "[Discarded!]" );
         }
         return 0;

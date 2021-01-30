@@ -5,12 +5,20 @@
 
     /**
      * @file Hsm.h
-     * @brief HSM implementation by Stefan Heinzmann.
+     * @brief Hierarchical State Machine.
+     * Based on a design using templates, by Stefan Heinzmann.
+     * Overload, 12(64):, December 2004
+     * @see https://accu.org/journals/overload/12/64/heinzmann_252/
+     *
      * Key concepts:
-     * (1) All event processing starts in a leaf state.
-     * (2) The "init" event of a composite state must
+     * (1) Each state is a separate type, with "init", "entry",
+     *     and "exit" routines mapped to static methods.
+     * (2) The event system processed by the state handlers
+           is left to the concrete implementation.
+     * (3) All event processing starts in a leaf state.
+     * (4) The "init" event of a composite state must
            transition internally to a sub-state.
-     * (3) The "init" event in a leaf state must set itself
+     * (5) The "init" event in a leaf state must set itself
      *     as the target of the next call to dispatch.
      */
 
@@ -18,23 +26,23 @@
     template<typename H>
     struct TopState
     {
-        using Base = void;
         using Host = H;
-        //
+        using Base = void;
+        // leaf states override:
         virtual bool handler( Host& ) const = 0;
         virtual unsigned getId() const = 0;
     };
 
-    // concrete machine derives from this (CRTP)
+    // CRTP: host (H parameter) derives from this
     template<typename H>
     class Dispatcher
     {
     public:
-        void next( TopState<H> const& s ) { state_ = &s; }
+        void activate( TopState<H> const& s ) { state_ = &s; }
         bool dispatch() { return state_->handler( static_cast<H&>(*this) ); }
 
     private:
-      TopState<H> const*    state_{nullptr};
+        TopState<H> const* state_{nullptr};
     };
 
     template<typename H, unsigned id, typename BaseState>
@@ -50,7 +58,7 @@
         template <typename X>
         bool handle( H&, const X& ) const { return false; } // discard event
         //
-        static void init( H& ); // no default implementation
+        static void init( H& ); // no default implementation, must define
         static void entry( H& ) {}
         static void exit( H& ) {}
     };
@@ -65,7 +73,7 @@
       template<typename X>
       bool handle( H& h, const X& x ) const { return Base::handle( h, x ); }
       //
-      static void init( H& ); // no default implementation
+      static void init( H& ); // no default implementation, must define
       static void entry( H& ) {}
       static void exit( H& ) {}
     };
@@ -84,13 +92,14 @@
       virtual bool handler( H& h ) const override { return handle( h, *this ); }
       virtual unsigned getId() const override { return id; }
       //
-      static void init( H& h ) { h.next( obj ); } // do not specialize this
+      static void init( H& h ) { h.activate( obj ); } // do NOT specialize this!
       static void entry( H& ) {}
       static void exit( H& ) {}
 
-      static LeafState const obj;
+      static LeafState const obj; // for dispatching
     };
 
+    // instantiated with concrete machine
     template<typename H, unsigned id, typename BaseState> 
     LeafState<H, id, BaseState> const LeafState<H, id, BaseState>::obj;
 
@@ -104,38 +113,38 @@
     public:
         enum { Res = sizeof(Test(static_cast<D*>(0))) == sizeof(Yes) ? 1 : 0 };
     };
-    
+
     template<bool> struct Bool{}; // discriminator for recursion
 
-    template<typename C, typename S, typename T> // Current, Source, Target
+    template<typename Current, typename Source, typename Target>
     struct Tran
     {
-        using Host = typename C::Host;
-        using CurrentBase = typename C::Base;
-        using SourceBase = typename S::Base;
-        using TargetBase = typename T::Base;
+        using Host        = typename Current::Host;
+        using CurrentBase = typename Current::Base;
+        using SourceBase  = typename Source::Base;
+        using TargetBase  = typename Target::Base;
         //
         enum { // work out when to terminate template recursion
             eTB_CB    = IsDerivedFrom<TargetBase, CurrentBase>::Res,
-            eS_CB     = IsDerivedFrom<S, CurrentBase>::Res,
-            eS_C      = IsDerivedFrom<S, C>::Res,
-            eC_S      = IsDerivedFrom<C, S>::Res,
+            eS_CB     = IsDerivedFrom<Source, CurrentBase>::Res,
+            eS_C      = IsDerivedFrom<Source, Current>::Res,
+            eC_S      = IsDerivedFrom<Current, Source>::Res,
             exitStop  = eTB_CB && eS_C,
             entryStop = eS_C || eS_CB && !eC_S
         };
-        // Overloading to end recursion.
+        // Overloading to terminate recursion.
         static void exitActions( Host&, Bool<true> ) {}
         static void exitActions( Host& h, Bool<false> )
         {
-            C::exit( h );
-            Tran<CurrentBase, S, T>::exitActions( h, Bool<exitStop>() );
+            Current::exit( h );
+            Tran<CurrentBase, Source, Target>::exitActions( h, Bool<exitStop>() );
         }
         //
         static void entryActions( Host&, Bool<true> ) {}
         static void entryActions( Host& h, Bool<false> )
         {
-            Tran<CurrentBase, S, T>::entryActions( h, Bool<entryStop>() );
-            C::entry( h );
+            Tran<CurrentBase, Source, Target>::entryActions( h, Bool<entryStop>() );
+            Current::entry( h );
         }
         // exit sequence in constructor, bottom up
         Tran(Host& h)
@@ -146,20 +155,20 @@
         // entry sequence in destructor, top down
         ~Tran()
         {
-            Tran<T,S,T>::entryActions( host_, Bool<false>() );
-            T::init( host_ );
+            Tran<Target,Source,Target>::entryActions( host_, Bool<false>() );
+            Target::init( host_ );
         }
         //
         Host& host_;
     };
 
-    template<typename T>
+    template<typename State>
     struct Init
     {
-        using Host = typename T::Host;
+        using Host = typename State::Host;
         //
         Init(Host& h) : host_(h) {}
-        ~Init() { T::entry( host_ ); T::init( host_ ); }
+        ~Init() { State::entry( host_ ); State::init( host_ ); }
         //
         Host& host_;
     };
