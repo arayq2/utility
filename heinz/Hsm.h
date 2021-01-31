@@ -19,9 +19,13 @@
      * (4) The "init" event of a composite state must
            transition internally to a sub-state.
      * (5) The "init" event in a leaf state must set itself
-     *     as the target of the next call to dispatch.
+     *     as the target of the next event to dispatch to.
      */
 
+#include <type_traits>
+
+namespace hsm
+{
     // template arg: concrete machine (host)
     template<typename H>
     struct TopState
@@ -33,13 +37,22 @@
         virtual unsigned getId() const = 0;
     };
 
-    // CRTP: host (H parameter) derives from this
+    // host (H parameter) can derive from this for CRTP
     template<typename H>
     class Dispatcher
     {
     public:
+        // current leaf state calls this (in its init method)
         void activate( TopState<H> const& s ) { state_ = &s; }
-        bool dispatch() { return state_->handler( static_cast<H&>(*this) ); }
+        // host calls this
+        // overload selected based on whether CRTP is used
+        template<typename X = H>
+        typename std::enable_if<std::is_base_of<Dispatcher<X>, X>::value, bool>::type
+        dispatch() { return state_->handler( static_cast<H&>(*this) ); }
+        //
+        template<typename X = H>
+        typename std::enable_if<!std::is_base_of<Dispatcher<X>, X>::value, bool>::type
+        dispatch( H& host ) { return state_->handler( host ); }
 
     private:
         TopState<H> const* state_{nullptr};
@@ -103,17 +116,6 @@
     template<typename H, unsigned id, typename BaseState> 
     LeafState<H, id, BaseState> const LeafState<H, id, BaseState>::obj;
 
-    template<class D, class B>
-    class IsDerivedFrom
-    {
-        class Yes { char a[1]; };
-        class No { char a[10]; };
-        static Yes Test( B* ); // undefined
-        static No Test( ... ); // undefined
-    public:
-        enum { Res = sizeof(Test(static_cast<D*>(0))) == sizeof(Yes) ? 1 : 0 };
-    };
-
     template<bool> struct Bool{}; // discriminator for recursion
 
     template<typename Current, typename Source, typename Target>
@@ -124,13 +126,14 @@
         using SourceBase  = typename Source::Base;
         using TargetBase  = typename Target::Base;
         //
-        enum { // work out when to terminate template recursion
-            eTB_CB    = IsDerivedFrom<TargetBase, CurrentBase>::Res,
-            eS_CB     = IsDerivedFrom<Source, CurrentBase>::Res,
-            eS_C      = IsDerivedFrom<Source, Current>::Res,
-            eC_S      = IsDerivedFrom<Current, Source>::Res,
+        enum : bool // compute when to terminate recursion
+        {
+            eTB_CB    = std::is_base_of<CurrentBase, TargetBase>::value,
+            eS_CB     = std::is_base_of<CurrentBase, Source>::value,
+            eS_C      = std::is_base_of<Current, Source>::value,
+            eC_S      = std::is_base_of<Source, Current>::value,
             exitStop  = eTB_CB && eS_C,
-            entryStop = eS_C || eS_CB && !eC_S
+            entryStop = eS_C || (eS_CB && !eC_S)
         };
         // Overloading to terminate recursion.
         static void exitActions( Host&, Bool<true> ) {}
@@ -172,5 +175,7 @@
         //
         Host& host_;
     };
+
+} // namespace hsm
 
 #endif // UTILITY_HSM_HEINZMANN_H

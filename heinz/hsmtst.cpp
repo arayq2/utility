@@ -2,31 +2,51 @@
 #include "Hsm.h"
 #include <stdio.h>
 
-//
+    /**
+     * @file hsmtst.cpp
+     * @brief Demo of HSM implementation a la Heinzmann.
+     * This is the Samek-Montgomery example state machine.
+     *
+     * Two versions, with or without CRTP, will compile.
+     */
 
     enum Signal { A_SIG,B_SIG,C_SIG,D_SIG,
                   E_SIG,F_SIG,G_SIG,H_SIG };
 
+using namespace hsm;
+
     // state machine
     class Host
+#ifdef USE_CRTP
     : public Dispatcher<Host>
+#endif
     {
     public:
         Host(); // needs concrete definitions of states
         ~Host() {}
         //
-        bool onSig( Signal sig ) { sig_ = sig; dispatch(); }
+#ifdef USE_CRTP
+        bool onSig( Signal sig ) { sig_ = sig; return dispatch(); }
+#else
+        void activate( TopState<Host> const& state ) { disp_.activate( state ); }
+        bool onSig( Signal sig ) { sig_ = sig; return disp_.dispatch( *this ); }
+#endif
         Signal getSig() const { return sig_; }
         //
         void foo( int i ) { foo_ = i; }
         int foo() const { return foo_; }
 
     private:
-      Signal    sig_;
-      int       foo_;
+#ifndef USE_CRTP
+        Dispatcher<Host> disp_;
+#endif
+        Signal    sig_;
+        int       foo_;
     };
 
-    // states
+namespace hsm
+{
+    // states, must be defined in namespace hsm for template specializations to work
     using Top = CompState<Host, 0>;
     using   S0 = CompState<Host, 1, Top>;
     using     S1 = CompState<Host, 2, S0>;
@@ -41,8 +61,6 @@
     template<> inline void S1::init( Host& h ) { Init<S11> i(h); printf("s1-INIT;"); }
     template<> inline void S0::init( Host& h ) { Init<S1> i(h); printf("s0-INIT;"); }
     template<> inline void Top::init( Host& h ) { Init<S0> i(h); printf("Top-INIT;"); }
-
-    Host::Host() { Top::init( *this); }
 
     // entry actions
     template<> inline void S0::entry( Host& ) { printf("s0-ENTRY;"); }
@@ -59,6 +77,10 @@
     template<> inline void S2::exit( Host& ) { printf("s2-EXIT;"); }
     template<> inline void S21::exit( Host& ) { printf("s21-EXIT;"); }
     template<> inline void S211::exit( Host& ) { printf("s211-EXIT;"); }
+
+} // namespace hsm
+
+    Host::Host() { Top::init( *this); }
 
     template<>
     template<typename X> inline bool
