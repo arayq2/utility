@@ -44,9 +44,7 @@ using namespace hsm;
         int       foo_;
     };
 
-namespace hsm
-{
-    // states, must be defined in namespace hsm for template specializations to work
+    // states
     using Top = CompState<Host, 0>;
     using   S0 = CompState<Host, 1, Top>;
     using     S1 = CompState<Host, 2, S0>;
@@ -55,7 +53,10 @@ namespace hsm
     using       S21 = CompState<Host, 5, S2>;
     using         S211 = LeafState<Host, 6, S21>;
 
-    // init actions (note the reverse ordering!)
+namespace hsm
+{   // defined in namespace hsm explicitly for template specializations to work
+
+// init actions (note the reverse ordering!)
     template<> inline void S21::init( Host& h ) { Init<S211> i(h); printf("s21-INIT;"); }
     template<> inline void S2::init( Host& h ) { Init<S21> i(h); printf("s2-INIT;"); }
     template<> inline void S1::init( Host& h ) { Init<S11> i(h); printf("s1-INIT;"); }
