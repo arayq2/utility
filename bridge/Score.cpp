@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace bridge;
+
 int main( int ac, char* av[])
 {
     auto    _level{Contract::Level::L1};
@@ -39,7 +41,7 @@ int main( int ac, char* av[])
         case 'h':
         case 'S':
         case 's': _rank = Contract::Rank::MJ; break;
-        default: std::cerr << "Bad format at scale" << std::endl; return 3;
+        default: std::cerr << "Bad format at rank" << std::endl; return 3;
     }
 
     switch ( *++_ptr )

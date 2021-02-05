@@ -1,6 +1,8 @@
 
 #include "Scoring.h"
 
+namespace bridge
+{
 namespace
 {
     int as_integer( Contract::Level level )
@@ -23,7 +25,7 @@ namespace
     int
     Contract::score( int tricks ) const
     {
-        if ( tricks < 1 || tricks > 13 ) { return 0; }
+        if ( tricks < 0 || tricks > 13 ) { return 0; }
         int _diff(tricks - 6 - as_integer( level_ ));
         return _diff < 0 ? -minus_( -_diff ) : plus_( _diff );
     }
@@ -113,3 +115,4 @@ namespace
         return _ts + _xtra + _otb + _game + slams_();
     }
 
+} // namespace bridge

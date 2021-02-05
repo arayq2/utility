@@ -3,6 +3,14 @@
 #ifndef BRIDGE_SCORING_H
 #define BRIDGE_SCORING_H
 
+namespace bridge
+{
+    /**
+     * @class Contract
+     * @brief Captures specification of a bid in Contract Bridge.
+     * Enum classes are used to enforce valid values only.
+     * Level is the only class that needs numeric equivalents.
+     */
     class Contract
     {
     public:
@@ -31,9 +39,14 @@
         int score( int tricks ) const;
 
         Contract& level( Level l ) { level_ = l; return *this; }
-        Contract& scale( Rank r )  { rank_  = r; return *this; }
-        Contract& level( Dbld d )  { dbld_  = d; return *this; }
-        Contract& level( bool v )  { vul_   = v; return *this; }
+        Contract& rank( Rank r )   { rank_  = r; return *this; }
+        Contract& dbld( Dbld d )   { dbld_  = d; return *this; }
+        Contract& vul( bool v )    { vul_   = v; return *this; }
+
+        Level level() const { return level_; }
+        Rank  rank() const  { return rank_; }
+        Dbld  dbld() const  { return dbld_; }
+        bool  vul() const   { return vul_; }
 
     private:
         Level   level_;
@@ -48,5 +61,6 @@
         int slams_() const;
     };
 
+} // namespace bridge
 
 #endif // BRIDGE_SCORING_H
