@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef SWANGAMES_SCORING_H
-#define SWANGAMES_SCORING_H
+#ifndef BRIDGE_SCORING_H
+#define BRIDGE_SCORING_H
 
     class Contract
     {
@@ -49,4 +49,4 @@
     };
 
 
-#endif // SWANGAMES_SCORING_H
+#endif // BRIDGE_SCORING_H
