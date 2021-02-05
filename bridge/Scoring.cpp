@@ -8,13 +8,13 @@ namespace
         switch ( level )
         {
         default:
-        case Contract::Level::L1 : return 0;
-        case Contract::Level::L2 : return 1;
-        case Contract::Level::L3 : return 2;
-        case Contract::Level::L4 : return 3;
-        case Contract::Level::L5 : return 4;
-        case Contract::Level::L6 : return 5;
-        case Contract::Level::L7 : return 6;
+        case Contract::Level::L1 : return 1;
+        case Contract::Level::L2 : return 2;
+        case Contract::Level::L3 : return 3;
+        case Contract::Level::L4 : return 4;
+        case Contract::Level::L5 : return 5;
+        case Contract::Level::L6 : return 6;
+        case Contract::Level::L7 : return 7;
         }
    }
     
@@ -24,7 +24,7 @@ namespace
     Contract::score( int tricks ) const
     {
         if ( tricks < 1 || tricks > 13 ) { return 0; }
-        int _diff(tricks - 7 - as_integer(level_));
+        int _diff(tricks - 6 - as_integer( level_ ));
         return _diff < 0 ? -minus_( -_diff ) : plus_( _diff );
     }
 
@@ -93,15 +93,15 @@ namespace
         switch ( dbld_ )
         {
         case Dbld::NO   : 
-            _ts = trickscore_( 1 + as_integer(level_) );
+            _ts = trickscore_( as_integer( level_ ) );
             _xtra = 0;
             break;
         case Dbld::YES  :
-            _ts = 2 * trickscore_( 1 + as_integer(level_) );
+            _ts = 2 * trickscore_( as_integer( level_ ) );
             _xtra = 50;
             break;
         case Dbld::AGAIN:
-            _ts = 4 * trickscore_( 1 + as_integer(level_) );
+            _ts = 4 * trickscore_( as_integer( level_ ) );
             _xtra = 100;
             break;
         }
