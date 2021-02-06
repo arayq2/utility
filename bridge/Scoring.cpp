@@ -5,6 +5,7 @@ namespace bridge
 {
 namespace
 {
+    inline
     int as_integer( Contract::Level level )
     {
         switch ( level )
@@ -18,8 +19,18 @@ namespace
         case Contract::Level::L6 : return 6;
         case Contract::Level::L7 : return 7;
         }
-   }
-    
+    }
+
+    inline
+    int slam( Contract::Level level, bool vul )
+    {
+        switch ( level )
+        {
+        case Contract::Level::L7 : return vul ? 1500 : 1000;
+        case Contract::Level::L6 : return vul ?  750 :  500;
+        default: return 0;
+        }
+    }
 }
 
     int
@@ -76,17 +87,6 @@ namespace
     }
     
     int
-    Contract::slams_() const
-    {
-        switch ( level_ )
-        {
-        case Level::L7 : return vul_ ? 1500 : 1000;
-        case Level::L6 : return vul_ ?  750 :  500;
-        default: return 0;
-        }
-    }
-
-    int
     Contract::plus_( int ot ) const
     {
         // trickscore
@@ -112,7 +112,7 @@ namespace
         // bonuses
         int _game = (_ts < 100 ? 50 : vul_ ? 500 : 300);
         // total
-        return _ts + _xtra + _otb + _game + slams_();
+        return _ts + _xtra + _otb + _game + slam( level_, vul_ );
     }
 
 } // namespace bridge

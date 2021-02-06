@@ -29,13 +29,18 @@ namespace bridge
             NO, YES, AGAIN
         };
 
-        Contract(Level l, Rank r, Dbld d, bool v)
+        Contract(Level l, Rank r, Dbld d, bool v = false)
         : level_(l)
         , rank_(r)
         , dbld_(d)
         , vul_(v)
         {}
-        
+
+        Contract(Level l, Rank r, bool v = false)
+        : Contract(l, r, Dbld::NO, v)
+        {}
+
+        // Any number outside [0,13] returns 0
         int score( int tricks ) const;
 
         Contract& level( Level l ) { level_ = l; return *this; }
@@ -58,7 +63,6 @@ namespace bridge
         int plus_( int ot = 0 ) const;  // overtricks
         int trickscore_( int ) const;
         int overtricks_( int ) const;
-        int slams_() const;
     };
 
 } // namespace bridge
