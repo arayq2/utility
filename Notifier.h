@@ -28,7 +28,7 @@ struct Notifier
     }
     
     template<typename Predicate>
-    void notify_if( Predicate const& predicate )
+    void notify_if( Event const& event, Predicate const& predicate )
     {
         for ( auto& _client : *this )
         {
