@@ -69,7 +69,7 @@ namespace Utility
     }
 
     /* static */
-    void SigWait::install_handlers( bool childAlso )
+    void SigWait::ignore_chidren()
     {
         struct sigaction    _action;
     
