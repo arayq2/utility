@@ -69,7 +69,7 @@ namespace Utility
     }
 
     /* static */
-    void SigWait::ignore_chidren()
+    void SigWait::ignore_children()
     {
         struct sigaction    _action;
     
@@ -77,6 +77,6 @@ namespace Utility
         _action.sa_flags   = SA_NOCLDWAIT | SA_NOCLDSTOP;
         _action.sa_handler = SIG_IGN;
         ::sigaction( SIGCHLD, &_action, nullptr );
-	}
+    }
 
 } // namespace Utility
