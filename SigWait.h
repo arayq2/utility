@@ -48,6 +48,7 @@ namespace Utility
         }
         
         static void install_handlers( bool childAlso = false );
+        static void ignore_children();
         
         template<typename ErrorPolicy = IgnoreSigwaitError>
         int wait( ErrorPolicy const& errPolicy = ErrorPolicy() ) { return sigmask_.wait( errPolicy ); }

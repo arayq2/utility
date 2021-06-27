@@ -33,13 +33,14 @@ namespace Utility
         ::sigaddset( &mask_, SIGCONT );
         pthread_sigmask( SIG_BLOCK, &mask_, nullptr );
     }
-    
+
     /* static */
     void SigWait::install_handlers( bool childAlso )
     {
         struct sigaction    _action;
     
         ::sigemptyset( &_action.sa_mask );
+        _action.sa_flags = 0;
     
         // convert SIGPIPE to inband EPIPE error
         _action.sa_handler = SIG_IGN;
@@ -66,5 +67,16 @@ namespace Utility
             ::sigaction( SIGCHLD, &_action, nullptr );
         }
     }
+
+    /* static */
+    void SigWait::install_handlers( bool childAlso )
+    {
+        struct sigaction    _action;
+    
+        ::sigemptyset( &_action.sa_mask );
+        _action.sa_flags   = SA_NOCLDWAIT | SA_NOCLDSTOP;
+        _action.sa_handler = SIG_IGN;
+        ::sigaction( SIGCHLD, &_action, nullptr );
+	}
 
 } // namespace Utility
