@@ -78,8 +78,7 @@ namespace
 #define ADJUST_(V,S) static_cast<void*>(static_cast<char *>(V) + S)
 		_base = ADJUST_(_base, size);
 #undef ADJUST_
-        ::mmap( _base, pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0 );
-        if ( _base == MAP_FAILED )
+        if ( MAP_FAILED == ::mmap( _base, pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0 )
         {
             err_ = errno;
         }
