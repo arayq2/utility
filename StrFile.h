@@ -32,6 +32,9 @@ namespace Utility
         std::size_t msize_{0};
         void*       base_{nullptr};
         int         err_{0};
+		//
+		void map_normal_( int fd, std::size_t size );
+		void map_special_( int fd, std::size_t size );
     };
 
     inline
