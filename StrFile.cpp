@@ -1,3 +1,8 @@
+/** ======================================================================+
+ + Copyright @2020-2021 Arjun Ray
+ + Released under MIT License
+ + see https://mit-license.org
+ +========================================================================*/
 
 #include "StrFile.h"
 
@@ -78,7 +83,7 @@ namespace
 #define ADJUST_(V,S) static_cast<void*>(static_cast<char *>(V) + S)
 		_base = ADJUST_(_base, size);
 #undef ADJUST_
-        if ( MAP_FAILED == ::mmap( _base, pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0 )
+        if ( MAP_FAILED == ::mmap( _base, pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0 ) )
         {
             err_ = errno;
         }
