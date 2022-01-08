@@ -18,7 +18,7 @@ namespace Utility
 {
     using SysClock  = std::chrono::system_clock;
     using TimePoint = std::chrono::time_point<SysClock>;
-	using MilliSecs = std::chrono::milliseconds;
+    using MilliSecs = std::chrono::milliseconds;
 
     /**
      * @class Scheduler
@@ -148,8 +148,8 @@ namespace Utility
         ready_.notify_one();
     }
 
-	//!> run: map_ is automatically sorted by Timepoint,
-	//!> thus map_.begin() is the earliest future timeout.
+    //!> run: map_ is automatically sorted by Timepoint,
+    //!> thus map_.begin() is the earliest future timeout.
     template<typename Handler>
     inline void
     Scheduler<Handler>::run_()
@@ -179,9 +179,9 @@ namespace Utility
     {
         for ( auto& _item : list_ )
         {
-			// search for TimePoint
+            // search for TimePoint
             auto    _pr(map_.equal_range( _item.first ));
-			// search for Item
+            // search for Item
             while ( _pr.first != _pr.second )
             {
                 if ( _item.second == _pr.first->second )
