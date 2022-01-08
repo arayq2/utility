@@ -27,12 +27,6 @@
         LOG_COMMIT_STREAM(T, X); \
     } while ( false )
 
-#include <sstream>
-#define LOG_COMMIT_STREAM(T, X) \
-    std::ostringstream  _oss; \
-    _oss << X; \
-    Utility::Log::commit( T, LOCATION(), _oss.str().c_str() )
-
 // For message construction using printf syntax. Example:
 //    LOG_FORMAT(logger, Utility::Log::Level::INFO, "my message: %s", myarg);
 //
@@ -52,6 +46,13 @@
     do if ( T ) { \
         LOG_COMMIT_FORMAT(T, __VA_ARGS__); \
     } while ( false )
+
+// Commit implementations
+#include <sstream>
+#define LOG_COMMIT_STREAM(T, X) \
+    std::ostringstream  _oss; \
+    _oss << X; \
+    Utility::Log::commit( T, LOCATION(), _oss.str().c_str() )
 
 #include "CharBuffer.h"
 #define LOG_COMMIT_FORMAT(T, ...) \

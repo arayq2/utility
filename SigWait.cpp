@@ -1,6 +1,9 @@
 
 #include "SigWait.h"
 #include "StackTrace.h"
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 namespace
 {
@@ -77,6 +80,12 @@ namespace Utility
         _action.sa_flags   = SA_NOCLDWAIT | SA_NOCLDSTOP;
         _action.sa_handler = SIG_IGN;
         ::sigaction( SIGCHLD, &_action, nullptr );
+    }
+
+    /* static */
+    void SigWait::die( bool crash )
+    {
+        ::kill( ::getpid(), crash ? SIGABRT : SIGTERM );
     }
 
 } // namespace Utility
