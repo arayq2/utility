@@ -1,3 +1,8 @@
+/** ======================================================================+
+ + Copyright @2020-2021 Arjun Ray
+ + Released under MIT License
+ + see https://mit-license.org
+ +========================================================================*/
 #pragma once
 
 #ifndef UTILITY_CHARBUFFER_H
@@ -20,13 +25,13 @@ namespace Utility
      *  - sprintf family
      *  - function calls
      *  - method calls
-     * Note: no CharBuffer(char const*, std::size_t) constructor, by design.
+     * Note: no CharBuffer(char const*, std::size_t) constructor, by design:
      * - Formatting constructor is very greedy in overload resolution,
      *   it would dominate all implicit conversions to std::size_t!
      * - Integral value formatted into a string is a common use case.
      * - CharBuffer(int_type, char const*) constructor is an alternative.
      */
-    template<typename std::size_t SIZE>
+    template<std::size_t SIZE>
     class CharBuffer
     {
     public:
@@ -51,7 +56,13 @@ namespace Utility
         template<typename I, typename = typename std::enable_if<std::is_integral<I>::value>::type>
         CharBuffer(I length, char const* source)
         {
-            copy_( source, length );
+            copyx_( source, length );
+        }
+
+        void
+        reset()
+        {
+            buf_[0] = '\0';
         }
 
         // ----------------------------------------------------------------
@@ -73,40 +84,40 @@ namespace Utility
 
         // ----------------------------------------------------------------
 
-        template<typename RV, typename Obj, typename... Args>
-        CharBuffer(RV (Obj::* method)( char*, std::size_t, Args... ), Obj& oref, Args&&... args)
+        template<typename RV, typename Obj, typename... A0s, typename... Args>
+        CharBuffer(RV (Obj::* method)( char*, std::size_t, A0s... ), Obj& oref, Args&&... args)
         {
             (void)(oref.*method)( buf_, SIZE, std::forward<Args>(args)... );
         }
 
-        template<typename RV, typename Obj, typename... Args>
-        CharBuffer(RV (Obj::* method)( char*, std::size_t, Args... ) const, Obj& oref, Args&&... args)
+        template<typename RV, typename Obj, typename... A0s, typename... Args>
+        CharBuffer(RV (Obj::* method)( char*, std::size_t, A0s... ) const, Obj& oref, Args&&... args)
         {
             (void)(oref.*method)( buf_, SIZE, std::forward<Args>(args)... );
         }
 
-        template<typename RV, typename Obj, typename... Args>
-        CharBuffer(RV (Obj::* method)( char*, std::size_t, Args... ) const, Obj const& oref, Args&&... args)
+        template<typename RV, typename Obj, typename... A0s, typename... Args>
+        CharBuffer(RV (Obj::* method)( char*, std::size_t, A0s... ) const, Obj const& oref, Args&&... args)
         {
             (void)(oref.*method)( buf_, SIZE, std::forward<Args>(args)... );
         }
 
         // ----------------------------------------------------------------
 
-        template<typename RV, typename Obj, typename... Args>
-        CharBuffer(RV (Obj::* method)( char*, std::size_t, Args... ), Obj* optr, Args&&... args)
+        template<typename RV, typename Obj, typename... A0s, typename... Args>
+        CharBuffer(RV (Obj::* method)( char*, std::size_t, A0s... ), Obj* optr, Args&&... args)
         {
             (void)(optr->*method)( buf_, SIZE, std::forward<Args>(args)... );
         }
 
-        template<typename RV, typename Obj, typename... Args>
-        CharBuffer(RV (Obj::* method)( char*, std::size_t, Args... ) const, Obj* optr, Args&&... args)
+        template<typename RV, typename Obj, typename... A0s, typename... Args>
+        CharBuffer(RV (Obj::* method)( char*, std::size_t, A0s... ) const, Obj* optr, Args&&... args)
         {
             (void)(optr->*method)( buf_, SIZE, std::forward<Args>(args)... );
         }
 
-        template<typename RV, typename Obj, typename... Args>
-        CharBuffer(RV (Obj::* method)( char*, std::size_t, Args... ) const, Obj const* optr, Args&&... args)
+        template<typename RV, typename Obj, typename... A0s, typename... Args>
+        CharBuffer(RV (Obj::* method)( char*, std::size_t, A0s... ) const, Obj const* optr, Args&&... args)
         {
             (void)(optr->*method)( buf_, SIZE, std::forward<Args>(args)... );
         }
@@ -148,6 +159,47 @@ namespace Utility
             return operator=( source.c_str() );
         }
 
+        CharBuffer& append( char const* tail )
+        {
+            char*   _end(::strchr( buf_, '\0' ));
+            copy_( tail, _end - buf_ );
+            return *this;
+        }
+
+        CharBuffer& append( std::string const& tail )
+        {
+            char*   _end(::strchr( buf_, '\0' ));
+            copy_( tail.c_str(), _end - buf_ );
+            return *this;
+        }
+
+        CharBuffer& keep( std::size_t len )
+        {
+            if ( len < SIZE ) { buf_[len] = '\0'; }
+            return *this;
+        }
+
+        CharBuffer& drop( std::size_t len )
+        {
+            copy_( buf_ + len );
+            return *this;
+        }
+
+        CharBuffer& set( char const* src, std::size_t len )
+        {
+            copyx_( src, len );
+            return *this;
+        }
+
+        // ----------------------------------------------------------------
+		int cmp( char const* str ) const { return ::strcmp( buf_, str ); }
+		int ncmp( char const* str, std::size_t n ) const { return ::strncmp( buf_, str, n ); }
+		int icmp( char const* str ) const { return ::strcasecmp( buf_, str ); }
+		int nicmp( char const* str, std::size_t n ) const { return ::strncasecmp( buf_, str, n ); }
+		char const* str(char const* str ) const { return ::strstr( buf_, str ); }
+		char const* istr(char const* str ) const { return ::strcasestr( buf_, str ); }
+		std::size_t spn( char const* acc ) const { return ::strspn( buf_, acc ); }
+		std::size_t cspn( char const* rej ) const { return ::strcspn( buf_, rej ); }
         // ----------------------------------------------------------------
 
         char*       get()       { return buf_; }
@@ -160,9 +212,9 @@ namespace Utility
     private:
         char    buf_[SIZE];
 
-        void copy_( char const* src )
+        void copy_( char const* src, std::ptrdiff_t offset = 0 )
         {
-            char*   _dst(buf_);
+            char*   _dst(buf_ + offset);
             char*   _end(buf_ + SIZE - 1);
             while( *src && _dst < _end )
             {
@@ -171,7 +223,7 @@ namespace Utility
             *_dst = '\0';
         }
 
-        void copy_( char const* src, std::size_t len )
+        void copyx_( char const* src, std::size_t len )
         {
             std::size_t     _ext(len < SIZE ? len : SIZE - 1);
             ::memcpy( buf_, src, _ext );
