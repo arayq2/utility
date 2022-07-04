@@ -1,5 +1,8 @@
-#pragma once
-
+/** ======================================================================+
+ + Copyright @2020-2022 Arjun Ray
+ + Released under MIT License
+ + see https://mit-license.org
+ +========================================================================*/
 #pragma once
 
 #include <cerrno>
@@ -37,6 +40,8 @@ namespace Utility
         sigset_t    mask_;
     };
 
+    using SigChldCallback = void (*)( void*, pid_t, int );
+
     class SigWait
     {
     public:
@@ -47,13 +52,21 @@ namespace Utility
             if ( !deferHandlers ) { install_handlers(); }
         }
         
+        static void set_sigchld_cb( SigChldCallback cb, void* arg = nullptr ); // nullptr = default
         static void install_handlers( bool childAlso = false );
         static void ignore_children();
         static void die( bool crash = false );
         
         template<typename ErrorPolicy = IgnoreSigwaitError>
         int wait( ErrorPolicy const& errPolicy = ErrorPolicy() ) { return sigmask_.wait( errPolicy ); }
-        
+        template<typename ErrorPolicy = IgnoreSigwaitError>
+        int wait_ex( ErrorPolicy const& errPolicy = ErrorPolicy() )
+        {
+            int _sig;
+            do { _sig = sigmask_.wait( errPolicy ); } while ( _sig == SIGCHLD );
+            return _sig;
+        }
+
     private:
         SigMask         sigmask_;
     };
