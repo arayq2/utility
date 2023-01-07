@@ -47,13 +47,6 @@ namespace Utility
     }
 
     /* static */
-    void SigWait::set_sigchld_cb( SigChldCallback cb, void* arg )
-    {
-        sccb  = cb == nullptr ? do_nothing : cb;
-        cbarg = cb == nullptr ? nullptr : arg;
-    }
-
-    /* static */
     void SigWait::install_handlers( bool childAlso )
     {
         struct sigaction    _action;
@@ -79,12 +72,19 @@ namespace Utility
     
         _action.sa_sigaction = sigill_handler;
         ::sigaction( SIGILL, &_action, nullptr );
-    
+
         if ( childAlso )
         {
             _action.sa_sigaction = sigchld_handler;
             ::sigaction( SIGCHLD, &_action, nullptr );
         }
+    }
+
+    /* static */
+    void SigWait::set_sigchld_cb( SigChldCallback cb, void* arg )
+    {
+        sccb  = cb == nullptr ? do_nothing : cb;
+        cbarg = cb == nullptr ? nullptr : arg;
     }
 
     /* static */
