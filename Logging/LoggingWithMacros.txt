@@ -1,0 +1,83 @@
+
+Logging (generically) with macros
+
+
+0.  Overview: the basic ideas.
+
+    a.  The codebase should not have direct dependencies on logging systems.
+    b.  Logging should be through macros in order to leverage short-circuiting.
+
+The following applies to C++ only.  Languages with support for lazy evaluation may enable equivalent schemes.
+
+
+1.  Overt dependency on logging systems is a form of tie-in.
+
+It commits the codebase to using that particular system for the long term.  This then requires the logging system itself to be properly maintained (with timely bug fixes, improvements, new releases).  Dependency on dead open source projects (such as log4cxx) is the worst scenario.
+
+To obviate this, logging should be in two conceptual parts: a generic front-end in the codebase, and a replaceable back-end in a separate implementation, generally a library.
+
+
+2.  Logging should be no slower (performance impeding) than necessary.
+
+There are three performance aspects of a logging statement:
+
+    a.  Determining whether the severity level is active.
+    b.  Formatting the logging statement content.
+    c.  Committing the statement to the logging implementation. 
+
+Generally, the second and third will be much more heavy duty than the first.  Asynchrony can mitigate the impact of the third, but the second needs to be avoided when it is not needed.  Logging through a function call defeats this aim, as in C++, all arguments are evaluated - and hence the logging statement is assembled - before a function call that may determine that the severity level is not active.
+
+
+3.  Using macros in the codebase.
+
+Logging in source code should be through (generic) macros.  This:
+
+    a.  Disengages the logging implementation from invocations.
+    b.  Permits short-circuit logic in the macro expansion to avoid unnecessary activation of code.
+    c.  Hides the code clutter of the macro expansion from the main logic flow.
+
+A full log entry often involves non-trivial construction of the diagnostic message.  This can impact program performance.  Consequently, to avoid unnecessary loss of performance, the message construction code should be contingent on a fast check of whether the severity level is even "active" to begin with.  Macros are ideal for such conditional activation of code.
+
+
+4.  Illustrative details.
+
+Thus, a generic macro could look something like this:
+
+    #define    LOG(context, level, message_expression) \
+        do if ( Is_Active( context, level ) ) { \
+            Commit_Log( context, level, message_expression ); \
+        } while ( false )
+
+    a.  The macro takes three arguments:
+        1.  A context reference (basically, a proxy for the back-end implementation).
+        2.  A severity level.
+        3.  A message constructing expression (possibly quite complex).
+
+    b.  The Is_Active() implementation is typically an inline function from a header file, for the fastest passible check.
+
+    c.  The Commit_Log() implementation can be heavy-duty, as it is activated only when needed.  Note that it will have two parts:
+        1.  Constructing the log entry contents (this is the message epxression).  Ideally, only once.
+        2.  Performing the I/O (storage strategy). This could involve multiple targets.
+
+The context reference could be generic as well.  For example:
+
+    struct Context
+    {
+        char const*     name_;  // for categorization
+        void*           impl_;  // opaque pointer for the implementation
+        int             level_; // minimum level for active logging 
+    };
+
+In which case, the Is_Active() implementation can be as simple as
+
+    level >= context.level_;
+
+
+5.  Hierarchical logging.
+
+The foregoing emphasized the advantages of short-circuiting the invocation of relatively expensive message expression code.  The hierarchical logging facility of the log4j family of loggers (for C++: log4cxx, log4cpp, log4cplus) runs somewhat counter to this consideration, in that logging contexts are arranged in a hierarchy, which the Is_Active() implementation may have to traverse.
+
+Optimally, this traversal should be possible without having to invoke the message expression code. Further, a full traversal should not be necessary: it should suffice to find one active category in the hierarchy.  Whereupon the full traversal can be deferred to the Commit_Log() implementation.
+
+
+  
