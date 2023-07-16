@@ -30,10 +30,12 @@ namespace Utility
     /**
      * @class Permuter
      * @brief returns indices of a random permutation, 0 to N-1.
+     * Continues with a new permutation if needed.
      */
     template<typename RNG = MT19937>
     class Permuter
     {
+        using Vector = std::vector<int>;
     public:
         ~Permuter() noexcept = default;
         template<typename... Args>
@@ -59,10 +61,10 @@ namespace Utility
         }
 
     private:
-        RNG                 rng_;
-        int                 max_;
-        int                 index_{0};
-        std::vector<int>    slots_;
+        RNG     rng_;
+        int     max_;
+        int     index_{0};
+        Vector  slots_;
 
         void reset_()
         {   // Fisher-Yates: permute slots
