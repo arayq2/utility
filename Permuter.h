@@ -101,7 +101,7 @@ namespace Utility
 
         void reset_( bool reinit )
         {
-            shuffler_( slots_, max_, reinit );
+            shuffler_( &slots_[0], max_, reinit );
             index_ = 0;
         }
     };
