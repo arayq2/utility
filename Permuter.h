@@ -28,55 +28,6 @@ namespace Utility
     };
 
     /**
-     * @class Permuter
-     * @brief returns indices of a random permutation, 0 to N-1.
-     * Continues with a new permutation if needed.
-     */
-    template<typename RNG = MT19937>
-    class Permuter
-    {
-        using Vector = std::vector<int>;
-    public:
-        ~Permuter() noexcept = default;
-        template<typename... Args>
-        explicit
-        Permuter(int max, Args&&... args)
-        : rng_(std::forward<Args>(args)...)
-        , max_(max)
-        , slots_(max_)
-        {
-            reset();
-        }
-
-        int operator()()
-        {
-            if ( index_ == max_ ) { reset_(); }
-            return slots_[index_++];
-        }
-
-        void reset()
-        {
-            std::iota( slots_.begin(), slots_.end(), 0 );
-            reset_();
-        }
-
-    private:
-        RNG     rng_;
-        int     max_;
-        int     index_{0};
-        Vector  slots_;
-
-        void reset_()
-        {   // Fisher-Yates: permute slots
-            for ( int _i{0}; _i < max_ - 1; ++_i )
-            {
-                std::swap( slots_[_i], slots_[rng_( _i, max_ - 1 )] );
-            }
-            index_ = 0;
-        }
-    };
-
-    /**
      * @class Shuffler
      * @brief Fisher-Yates algorithm to shuffle an array of indices.
      */
@@ -93,9 +44,9 @@ namespace Utility
         , base_(base)
         {}
 
-        void operator()( int* slots, int max, bool reset = false )
+        void operator()( int* slots, int max, bool reinit = false )
         {
-            if ( reset )
+            if ( reinit )
             {
                 std::iota( slots, slots + max, base_ );
             }
@@ -108,6 +59,51 @@ namespace Utility
     private:
         RNG     rng_;
         int     base_{0};
+    };
+
+    /**
+     * @class Permuter
+     * @brief returns indices of a random permutation, 0 to N-1.
+     * Continues with a new permutation if needed.
+     */
+    template<typename RNG = MT19937>
+    class Permuter
+    {
+        using Vector = std::vector<int>;
+    public:
+        ~Permuter() noexcept = default;
+        template<typename... Args>
+        explicit
+        Permuter(int max, Args&&... args)
+        : shuffler_(0, std::forward<Args>(args)...)
+        , max_(max)
+        , slots_(max_)
+        {
+            reset();
+        }
+
+        int operator()()
+        {
+            if ( index_ == max_ ) { reset_( false ); }
+            return slots_[index_++];
+        }
+
+        void reset()
+        {
+            reset_( true );
+        }
+
+    private:
+        Shuffler<RNG>   shuffler_;
+        int             max_;
+        int             index_{0};
+        Vector          slots_;
+
+        void reset_( bool reinit )
+        {
+            shuffler_( slots_, max_, reinit );
+            index_ = 0;
+        }
     };
 
 } // namespace Utility
