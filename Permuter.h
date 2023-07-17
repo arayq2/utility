@@ -76,4 +76,38 @@ namespace Utility
         }
     };
 
+    /**
+     * @class Shuffler
+     * @brief Fisher-Yates algorithm to shuffle an array of indices.
+     */
+    template<typename RNG = MT19937>
+    class Shuffler
+    {
+    public:
+        ~Shuffler() noexcept = default;
+        Shuffler() = default;
+        template<typename... Args>
+        explicit
+        Shuffler(int base, Args&&... args)
+        : rng_(std::forward<Args>(args)...)
+        , base_(base)
+        {}
+
+        void operator()( int* slots, int max, bool reset = false )
+        {
+            if ( reset )
+            {
+                std::iota( slots, slots + max, base_ );
+            }
+            for ( int _i{0}; _i < max - 1; ++_i )
+            {
+                std::swap( slots[_i], slots[rng_( _i, max - 1 )] );
+            }
+        }
+
+    private:
+        RNG     rng_;
+        int     base_{0};
+    };
+
 } // namespace Utility
