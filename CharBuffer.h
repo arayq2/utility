@@ -30,6 +30,29 @@ namespace Utility
      *   it would dominate all implicit conversions to std::size_t!
      * - Integral value formatted into a string is a common use case.
      * - CharBuffer(int_type, char const*) constructor is an alternative.
+     *
+     * Examples of usage:
+     * (1) Formatting a (limited length) input string on the fly for a function( char * ):
+     *          char    buf[SOME_SIZE];
+     *          sprintf( buf, "some pattern: %d %s\n", foo, bar );
+     *          function( buf );
+     *      becomes:
+     *          CharBuffer<SOME_SIZE>  cb("some pattern: %d %s\n", foo, bar);
+     *          function_call( cb.get() );
+     *      or even inline it!:
+     *          function( CharBuffer<SOME_SIZE>("some pattern: %d %s\n", foo, bar).get() );
+     * (2) Invoking a function( char*, size_t, ... ):
+     *          char    buf[SOME_SIZE];
+     *          function( buf, SOME_SIZE, ... );
+     *      becomes
+     *          CharBuffer<SOME_SIZE>(function, ...);
+     * (3) Method calls are similar:
+     *          CharBuffer<SSOME_SIZE>(&Class::method, object, ...);
+     *      where the 'object' argument can be either a reference or a pointer.
+     * (4) Storage for a char const* string that needs to be passed as a char* argument
+     *     (especially string literals, which will be in a read-only area):
+     *          CharBuffer<SOME_SIZE>( const_pointer ).get()
+     *      (get() is overloaded to return a char* or a char const* as needed by the context).
      */
     template<std::size_t SIZE>
     class CharBuffer
@@ -139,6 +162,13 @@ namespace Utility
             return *this;
         }
 
+        template<typename RV, typename Function, typename... Args>
+        RV apply_rv( Function&& function, Args&&... args )
+        {
+            buf_[0] = '\0';
+            return function( buf_, SIZE, std::forward<Args>(args)... );
+        }
+
         // ----------------------------------------------------------------
 
         template<std::size_t SZ>
@@ -204,6 +234,20 @@ namespace Utility
 
         char*       get()       { return buf_; }
         char const* get() const { return buf_; }
+
+        CharBuffer& chomp()
+        {
+            std::size_t _len(size());
+            if ( _len > 0 && buf_[_len - 1] == '\n' )
+            {
+                buf_[_len - 1] = '\0';
+            }
+            if ( _len > 1 && buf_[_len - 2] == '\r' )
+            {
+                buf_[_len - 2] = '\0';
+            }
+            return *this;
+        }
 
         std::size_t size() const { return ::strlen( buf_ ); }
 
