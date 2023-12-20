@@ -96,6 +96,19 @@ namespace Utility
             return true;
         }
 
+        template<typename Peeker>
+        bool wait_for( Peeker&& peeker )
+        {
+		    Lock	_lock(mx_);
+            while ( !stopped_ && queue_.empty() )
+            {
+                ready_.wait( _lock );
+            }
+            if ( stopped_ ) { return false; }
+            peeker( std::cref(queue_.front()) ); // dangerous!
+            return true;
+        }
+
         //!> Canonical usage
         template<typename Handler, typename... Args>
         void pump( Handler&& handler, Args&&... args )

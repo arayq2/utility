@@ -1,3 +1,8 @@
+/** ======================================================================+
+ + Copyright @2020-2021 Arjun Ray
+ + Released under MIT License
+ + see https://mit-license.org
+ +========================================================================*/
 #pragma once
 
 #include "CallStack.h"

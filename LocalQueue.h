@@ -42,10 +42,10 @@ namespace Utility
             return queue_.put( std::move(item) );
         }
 
-        void stop()
-        {
-            queue_.stop();
-        }
+        //void stop()
+        //{
+        //    queue_.stop();
+        //}
 
     private:
         Queue   queue_;

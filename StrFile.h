@@ -29,6 +29,7 @@ namespace Utility
         using Spec = std::pair<char const*, std::size_t>;
         Spec spec() const { return {get(), size()}; }
 
+        char*       get()       { return static_cast<char*>(base_); }
         char const* get() const { return static_cast<char const*>(base_); }
         std::size_t size() const { return fsize_; }
 

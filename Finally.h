@@ -20,19 +20,15 @@ namespace Utility
         : action_(std::move(action))
         {}
 
-        void cancel() { cancelled_ = true; }
+        void cancel() { action_ = [](){}; }
 
         ~Finally() noexcept
         {
-            if ( !cancelled_ ) try { action_(); } catch (...) {}
+            try { action_(); } catch (...) {}
         }
 
     private:
         Action  action_;
-        bool    cancelled_{false};
-
-        Finally(Finally&) = delete;
-        Finally& operator=( Finally const& ) = delete;
     };
 
 } // namespace Utility
