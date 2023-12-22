@@ -222,14 +222,14 @@ namespace Utility
         }
 
         // ----------------------------------------------------------------
-		int cmp( char const* str ) const { return ::strcmp( buf_, str ); }
-		int ncmp( char const* str, std::size_t n ) const { return ::strncmp( buf_, str, n ); }
-		int icmp( char const* str ) const { return ::strcasecmp( buf_, str ); }
-		int nicmp( char const* str, std::size_t n ) const { return ::strncasecmp( buf_, str, n ); }
-		char const* str(char const* str ) const { return ::strstr( buf_, str ); }
-		char const* istr(char const* str ) const { return ::strcasestr( buf_, str ); }
-		std::size_t spn( char const* acc ) const { return ::strspn( buf_, acc ); }
-		std::size_t cspn( char const* rej ) const { return ::strcspn( buf_, rej ); }
+        int cmp( char const* str ) const { return ::strcmp( buf_, str ); }
+        int ncmp( char const* str, std::size_t n ) const { return ::strncmp( buf_, str, n ); }
+        int icmp( char const* str ) const { return ::strcasecmp( buf_, str ); }
+        int nicmp( char const* str, std::size_t n ) const { return ::strncasecmp( buf_, str, n ); }
+        char const* str(char const* str ) const { return ::strstr( buf_, str ); }
+        char const* istr(char const* str ) const { return ::strcasestr( buf_, str ); }
+        std::size_t spn( char const* acc ) const { return ::strspn( buf_, acc ); }
+        std::size_t cspn( char const* rej ) const { return ::strcspn( buf_, rej ); }
         // ----------------------------------------------------------------
 
         char*       get()       { return buf_; }
