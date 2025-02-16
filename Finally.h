@@ -1,4 +1,12 @@
+/** ======================================================================+
+ + Copyright @2020 Arjun Ray
+ + Released under MIT License
+ + see https://mit-license.org
+ +========================================================================*/
 #pragma once
+
+#ifndef UTILITY_FINALLY_H
+#define UTILITY_FINALLY_H
 
 #include <functional> // std::function
 #include <utility>    // std::move
@@ -32,3 +40,5 @@ namespace Utility
     };
 
 } // namespace Utility
+
+#endif // UTILITY_FINALLY_H
