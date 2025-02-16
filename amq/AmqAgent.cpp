@@ -32,8 +32,6 @@ namespace ams
         // handle resumption here;
     }
 
-    ExceptionLogger logger{};
-
 //=========================================================================
     SendMap::Target&
     SendMap::get( EndPoint const& ep, SessionPtr& sp )
@@ -78,7 +76,6 @@ namespace ams
     , sess_(conn_)
     , scope_(conn_)
     , sender_(sess_)
-    , logger_{} 
     {            
         conn_->addTransportListener( &logger_ );
         conn_->setExceptionListener( &logger_ );

@@ -120,14 +120,14 @@ namespace
         std::string one_shot( std::string const& topic );
 
     private: // Order alert! This is for safety in destructor sequence
-        Credentials    cred_;
-        ConnectionPtr  conn_;
-        SessionPtr     sess_;
-        ConnScope      scope_;  // connection activation
-        SendMap        tgts_;   // publish topic cache
-        ProducerPtr    sender_; // publisher, need only one
-        RecvMap        rcvrs_;  // subscribers, could have more than one
-        ExceptionLogger logger_;
+        Credentials     cred_;
+        ExceptionLogger logger_; // must outlive connection
+        ConnectionPtr   conn_;
+        SessionPtr      sess_;
+        ConnScope       scope_;  // connection activation
+        SendMap         tgts_;   // publish topic cache
+        ProducerPtr     sender_; // publisher, need only one
+        RecvMap         rcvrs_;  // subscribers, could have more than one
     };
 
     /**
