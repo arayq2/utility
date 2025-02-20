@@ -76,9 +76,12 @@ namespace ams
     , sess_(conn_)
     , scope_(conn_)
     , sender_(sess_)
-    {            
-        conn_->addTransportListener( &logger_ );
-        conn_->setExceptionListener( &logger_ );
+    {
+        if ( conn_ )
+        {
+            conn_->addTransportListener( &logger_ );
+            conn_->setExceptionListener( &logger_ );
+        }
     }
 
     AmqAgent&
@@ -158,7 +161,7 @@ namespace ams
     bool
     Connection::remove( EndPoint const& ep )
     {
-        return conn_.release( ep );
+        return conn_ ? conn_.release( ep ) : false;
     }
 
 } // namespace ams

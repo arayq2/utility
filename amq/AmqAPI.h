@@ -69,6 +69,8 @@ namespace ams
         ConnectionPtr& operator=( ConnectionPtr const& ) = delete;
         ConnectionPtr& operator=( ConnectionPtr&& ) = default;
         //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
+        //
         activemq::core::ActiveMQConnection* operator->() { return ptr_.get(); }
         //
         void addTransportListener(activemq::transport::TransportListener* transportListener)
@@ -123,6 +125,8 @@ namespace ams
         SessionPtr& operator=( SessionPtr const& ) = delete;
         SessionPtr& operator=( SessionPtr&& ) = default;
         //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
+        //
         cms::Session* operator->() { return ptr_.get(); }
     };
 
@@ -143,6 +147,8 @@ namespace ams
         DestinationPtr(DestinationPtr&&) = default;
         DestinationPtr& operator=( DestinationPtr const& ) = delete;
         DestinationPtr& operator=( DestinationPtr&& ) = default;
+        //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
 
 #define TODESTP(X)   static_cast<cms::Destination*>(X)
         DestinationPtr(SessionPtr& sp, EndPoint const& ep)
@@ -186,6 +192,8 @@ namespace ams
         ConsumerPtr& operator=( ConsumerPtr const& ) = delete;
         ConsumerPtr& operator=( ConsumerPtr&& ) = default;
         //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
+        //
         cms::MessageConsumer* operator->() { return ptr_.get(); }
         //
         ConsumerPtr& reset( SessionPtr& sp, EndPoint const& ep )
@@ -216,6 +224,8 @@ namespace ams
         ProducerPtr& operator=( ProducerPtr const& ) = delete;
         ProducerPtr& operator=( ProducerPtr&& ) = default;
         //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
+        //
         cms::MessageProducer* operator->() { return ptr_.get(); }
     };
 
@@ -240,6 +250,8 @@ namespace ams
         BoundProducerPtr& operator=( BoundProducerPtr const& ) = delete;
         BoundProducerPtr& operator=( BoundProducerPtr&& ) = default;
         //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
+        //
         cms::MessageProducer* operator->() { return ptr_.get(); }
     };
 
@@ -261,6 +273,8 @@ namespace ams
         TextMessagePtr(TextMessagePtr&&) = default;
         TextMessagePtr& operator=( TextMessagePtr const& ) = delete;
         TextMessagePtr& operator=( TextMessagePtr&& ) = default;
+        //
+        explicit operator bool() const { return ptr_.get() != nullptr; }
         //
         cms::TextMessage* get() { return ptr_.get(); }        
     };

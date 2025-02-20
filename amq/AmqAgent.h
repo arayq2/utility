@@ -113,6 +113,13 @@ namespace
 
         AmqAgent& subscribe( EndPoint const& endpoint, cms::MessageListener* listener );
         AmqAgent& unsubscribe( EndPoint const& endpoint, bool release = false );
+        // Rule of Five
+        ConnectionPtr(ConnectionPtr const&) = delete;
+        ConnectionPtr(ConnectionPtr&&) = default;
+        ConnectionPtr& operator=( ConnectionPtr const& ) = delete;
+        ConnectionPtr& operator=( ConnectionPtr&& ) = default;
+        //
+        explicit operator bool() const { return conn_ && sess_ && sender_; }
 
         AmqAgent& publish( EndPoint const& endpoint, std::string const& text );
         AmqAgent& purge( EndPoint const& endpoint, bool keep = false ); // for cached publish targets
