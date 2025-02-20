@@ -35,7 +35,7 @@
     inline
     RecvClient::~RecvClient()
     {
-        if ( release_ ) { LOG_STRM_INFO(nullptr, "Releasing subscriptions"); }
+        if ( release_ ) { std::cerr << "Releasing subscriptions" << std::endl; }
         for ( auto& _l : listeners_ ) { agent_.unsubscribe( _l->get_info(), release_ ); }
     }
 
@@ -70,7 +70,7 @@
 //-------------------------------------------------------------------------
     int on_error( char const* msg )
     {
-        LOG_STRM_ERROR(nullptr, "Error: " << msg);
+        std::cerr << nullptr, "Error: " << msg << std::endl;
         return 1;
     }
 
@@ -78,7 +78,7 @@
     {
         void onError( int errnum ) const
         {
-            LOG_STRM_ERROR(nullptr, "Errno: " << errnum);
+            std::cerr << nullptr, "Errno: " << errnum << std::endl;
         }
     };
 
