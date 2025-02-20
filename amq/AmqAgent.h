@@ -70,7 +70,7 @@ namespace
 
     struct Receiver
     {
-        cms::MessageListener*   listener_;
+        cms::MessageListener*   listener_; // no "smart" pointer wrapper needed!
         ConsumerPtr             consumer_;
 
         ~Receiver() = default;
