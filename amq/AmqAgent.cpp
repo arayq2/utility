@@ -5,7 +5,6 @@
  +========================================================================*/
 
 #include "AmqAgent.h"
-#include "Finally.h"
 
 namespace ams
 {
@@ -128,18 +127,17 @@ namespace ams
     std::string
     AmqAgent::one_shot( std::string const& topic )
     {
-        ConsumerPtr         _cp(sess_, {topic, false});
-        auto                _mp(_cp->receiveNoWait());
+        ConsumerPtr                     _cp(sess_, {topic, false});
+        std::unique_ptr<cms::Message>   _mp(_cp->receiveNoWait());
         if ( !_mp ) { return ""; }
-        Utility::Finally    _fin{[_mp]() { delete _mp; }};
         // this is a disgusting API: relying on dynamic_cast for type of Message
-        auto    _tptr(dynamic_cast<cms::TextMessage const*>(_mp));
+        auto    _tptr(dynamic_cast<cms::TextMessage const*>(_mp.get()));
         if ( _tptr )
         {
             return _tptr->getText();
         }
         // fallback for ActiveMQ "smart" handling of stomp messages
-        auto    _bptr(dynamic_cast<cms::BytesMessage const*>(_mp));
+        auto    _bptr(dynamic_cast<cms::BytesMessage const*>(_mp.get()));
         if ( _bptr )
         {
             int                         _len(_bptr->getBodyLength());

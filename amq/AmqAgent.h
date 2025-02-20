@@ -114,10 +114,10 @@ namespace
         AmqAgent& subscribe( EndPoint const& endpoint, cms::MessageListener* listener );
         AmqAgent& unsubscribe( EndPoint const& endpoint, bool release = false );
         // Rule of Five
-        ConnectionPtr(ConnectionPtr const&) = delete;
-        ConnectionPtr(ConnectionPtr&&) = default;
-        ConnectionPtr& operator=( ConnectionPtr const& ) = delete;
-        ConnectionPtr& operator=( ConnectionPtr&& ) = default;
+        AmqAgent(AmqAgent const&) = delete;
+        AmqAgent(AmqAgent&&) = default;
+        AmqAgent& operator=( AmqAgent const& ) = delete;
+        AmqAgent& operator=( AmqAgent&& ) = default;
         //
         explicit operator bool() const { return conn_ && sess_ && sender_; }
 
