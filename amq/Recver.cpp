@@ -24,7 +24,8 @@ public:
     
     void on_message( std::string const& msg, std::string const& )
     {
-        std::cerr << "MyClient received: " << msg << std::endl;
+        std::cerr << "MyClient received:" << std::endl;
+        std::cout << msg << std::endl;
     }
 };
 
@@ -51,9 +52,9 @@ public:
         while ( (_opt = ::getopt( ac, av, "qrt" )) != -1 )
         switch ( _opt )
         {
-        case 'q': isT  = false;
-        case 'r': rel  = true;
-        case 't': isT  = true;
+        case 'q': isT  = false; break;
+        case 'r': rel  = true; break;
+        case 't': isT  = true; break;
         default: break;
         }
         //
@@ -69,11 +70,11 @@ public:
         //
         Utility::SigWait::install_handlers();
 #ifdef DEFAULT_IMPL
-        MessageReceiver     _rcl{_release};
+        MessageReceiver     _client{_release};
 #else
-        MyClient            _rcl{_release};
+        MyClient            _client{_release};
 #endif
-        for ( ; _start < ac; ++_start ) { _rcl.subscribe( av[_start], _isTopic ); }
+        for ( ; _start < ac; ++_start ) { _client.subscribe( av[_start], _isTopic ); }
         Utility::SigWait(true).wait( ErrnoPolicy() );
         return 0;
     }
