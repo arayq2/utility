@@ -27,8 +27,9 @@
         if ( av[1][0] != '-' ) { return on_error( "First argument must be -q or -t" ); }
 
         bool        _isQ{av[1][1] == 'q'};
+        ++av; --ac;
         AmqAgent    _agent{Credentials()};
-        if ( ac < 4 )
+        if ( ac < 3 )
         {
             std::string     _line;
             while ( std::getline( std::cin, _line ) )
@@ -42,7 +43,7 @@
             Utility::StrFile    _msg{_file};
             if ( !_msg ) { return on_error( ::strerror( _msg.error() ) ); }
 
-            _agent.publish( {av[2], _isQ}, _msg.get() );
+            _agent.publish( {av[1], _isQ}, _msg.get() );
             // pause?
         }
         return 0;

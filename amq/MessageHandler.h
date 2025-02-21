@@ -41,7 +41,7 @@ namespace ams {
     {
     public:
         ~MessageHandler() noexcept = default;
-        MessageHandler(Client& client, Info const& info)
+        MessageHandler(Client& client, Info const& info = Info())
         : cp_(&client)
         , info_(info)
         {}
