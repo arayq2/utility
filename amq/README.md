@@ -12,7 +12,7 @@ The work is informed by previous efforts to develop C++ APIs on top of theTibco 
 
 (Tibco APIs are not freely available)
 
-`AmqAPI.h`: The core wrappers of the main CMS objects: `Connection`, `Session`, `Destination`, `Poducer`, `Consumer`, `Messagw` (really, only `TextMessage`at this juncture); along with some helpers.
+`AmqAPI.h`: The core wrappers of the main CMS objects: `Connection`, `Session`, `Destination`, `Poducer`, `Consumer`, `Message` (really, only `TextMessage`at this juncture); along with some helpers.
 
 `EndPoint.h`: A helper class for CMS `Destination`s.
 
@@ -27,6 +27,9 @@ The work is informed by previous efforts to develop C++ APIs on top of theTibco 
 `Recver.cpp`: A client to receive messages from one or more subscripions (either all topics or all queues).
  
 
+**OTHER ITEMS**
+
+Various other "utility" classes are used in these files. They can be found in the parent folder. 
 
 
 
