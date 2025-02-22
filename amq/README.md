@@ -14,6 +14,8 @@ The work is informed by previous efforts to develop C++ APIs on top of theTibco 
 
 `AmqAPI.h`: The core wrappers of the main CMS objects: `Connection`, `Session`, `Destination`, `Poducer`, `Consumer`, `Messagw` (really, only `TextMessage`at this juncture); along with some helpers.
 
+`EndPoint.h`: A helper class for CMS `Destination`s.
+
 `AmqAgent.{h,cpp}`:  An all-in-one simple "Session" class, supporting one included producer and multiple consumers if desired.
 
 `MessageHandler.h`: The basic "listener" class, passed into the CMS API to receive messages asynchronously.
