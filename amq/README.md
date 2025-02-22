@@ -3,7 +3,7 @@
 
 The goal is two-fold. First, a simpler C++ API to `ActiveMQ` functionality. Second, to implement this API on an underlying API in C, not `ActiveMQ CMS`, which is C++ unfortunately. Curently, the classes are defined directly on top of CMS, treating its objects as if they were "typed void pointers". An underlying C API would in fact provide just that kind of pointers. The translation of the internals of our wrapper API would be straightforward.
 
-The simpler surface API is based on the KISS principle: the complex may be harder than the simple, but the simple must be easy. The code for the Sender and Recver programs are provided as demonstrations of this. They can be compared with the baroque monstrosities in the `ActiveMQ-CPP` distribution package, such as `SimpleProducer.cpp` and `SimpleAyncConsumer.cpp`. When you just want to send and receive messages, without bells and whistles, how much "necessary" boilerplate are you willing to tolerate?
+The simpler surface API is based on the KISS principle: _the complex may be harder than the simple, but the simple must be easy_. The code for the Sender and Recver programs are provided as demonstrations of this. They can be compared with the baroque monstrosities in the `ActiveMQ-CPP` distribution package, such as `SimpleProducer.cpp` and `SimpleAyncConsumer.cpp`. When you just want to send and receive messages, without bells and whistles, how much "necessary" boilerplate are you willing to tolerate?
 
 The work is informed by previous efforts to develop C++ APIs on top of theTibco EMS and Solace libraries, both of which are sensible industrial strength implementations. Their only problem is that they cost an arm and a leg, whereas ActiveMQ, a well-tested product, is open source and free.
 
