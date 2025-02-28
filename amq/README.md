@@ -5,12 +5,14 @@ The goal is two-fold. First, a simpler C++ API to `ActiveMQ` functionality. Seco
 
 The simpler surface API is based on the KISS principle: _the complex may be harder than the simple, but the simple must be easy_. The code for the `Sender` and `Recver` programs are provided as demonstrations of this. They can be compared with the baroque monstrosities in the `ActiveMQ-CPP` distribution package, such as [`SimpleProducer.cpp`](https://github.com/apache/activemq-cpp/blob/master/activemq-cpp/src/examples/producers/SimpleProducer.cpp) and [`SimpleAyncConsumer.cpp`](https://github.com/apache/activemq-cpp/blob/master/activemq-cpp/src/examples/consumers/SimpleAsyncConsumer.cpp). When you just want to send and receive messages, without bells and whistles, how much "necessary" boilerplate are you willing to tolerate?
 
-The work is informed by earlier efforts to develop C++ APIs on top of the `Tibco EMS` and `Solace` libraries, both of which are sensible industrial strength implementations. Their only problem is that they cost an arm and a leg, whereas `ActiveMQ`, a well-tested product, is open source and free.
+The idea of a C interface to a C++ library is not new.  It's called the [Hourglass API pattern](https://www.linkedin.com/pulse/hourglass-interface-cc-apis-c-libraries-jarno-ralli-phd-lfgrf/) (an unfortunate name for search purposes, as there will be a lot of confounding hits to an irrelevant graphic pattern of the same name.)  Here, the aim would be to preserve the guts of the CPP library but expose it via C, not C++.  We can then reconstruct the CMS C++ interface on _that_, rather than directly on the library.
+
+The work is informed by earlier efforts to develop C++ APIs on top of the `Tibco EMS` and `Solace` libraries, both of which are sensible industrial strength implementations. Their only problem is that they cost an arm and a leg, whereas `ActiveMQ`, a well-tested product, is open source and free.  The disadvantage is the lack of a C API.
 
 [Solace](https://github.com/SolaceSamples/solace-samples-c)
 [Client](https://github.com/SolaceSamples/solace-samples-c/tree/master/inc/solclient)
 
-(Tibco APIs are not freely available)
+(Tibco APIs are not freely available, although their documentation is)
 
 `AmqAPI.h`: The core wrappers of the main `CMS` objects: `Connection`, `Session`, `Destination`, `Producer`, `Consumer`, `Message` (really, only `TextMessage`at this juncture); along with some helpers.
 
